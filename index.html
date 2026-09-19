@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimizador de Cortes MDF (1.22 x 2.44)</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Optimizador de Cortes para MDF</h1>
+        <p>Lámina estándar: 1220 mm x 2440 mm</p>
+
+        <div class="form-group">
+            <h3>Agregar Pieza</h3>
+            <input type="text" id="nombrePieza" placeholder="Nombre (ej. Puerta lateral)">
+            <input type="number" id="anchoPieza" placeholder="Ancho (mm)">
+            <input type="number" id="altoPieza" placeholder="Alto (mm)">
+            <input type="number" id="cantidadPieza" placeholder="Cantidad" value="1">
+            <button id=" agregarBtn">Añadir a la lista</button>
+        </div>
+
+        <div class="listado">
+            <h3>Piezas Solicitadas</h3>
+            <ul id="listaPiezas"></ul>
+            <button id="optimizarBtn">Calcular Cortes</button>
+        </div>
+
+        <div class="resultado">
+            <h3>Diagrama de Corte</h3>
+            <!-- Aquí dibujaremos la lámina con los cortes -->
+            <canvas id="canvasLamina" width="610" height="1220" style="border:2px solid #000; background: #f9f9f9;"></canvas>
+        </div>
+    </div>
+
+    <script src="js/optimizer.js"></script>
+    <script src="js/drawer.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
