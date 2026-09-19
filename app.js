@@ -15,13 +15,13 @@ const ctx = canvas.getContext('2d');
 // Dimensiones reales del MDF en milímetros
 const LAMINA_ANCHO = 1220;
 const LAMINA_ALTO = 2440;
+const MERMA_SIERRA = 3; // Espesor del disco de la sierra en mm
 
-// Escala para dibujar en el canvas (Dividimos entre 2 para que sea cómodo a la vista)
-const ESCALA = 0.5; 
+// Escala para dibujar en el canvas
+const escala = 0.5; 
 
-// Ajustar tamaño del canvas según la escala
-canvas.width = LAMINA_ANCHO * ESCALA; // 610 px
-canvas.height = LAMINA_ALTO * ESCALA; // 1220 px
+canvas.width = LAMINA_ANCHO * escala; 
+canvas.height = LAMINA_ALTO * escala; 
 
 // Evento para agregar pieza a la lista
 agregarBtn.addEventListener('click', () => {
@@ -40,7 +40,6 @@ agregarBtn.addEventListener('click', () => {
         return;
     }
 
-    // Añadir la cantidad de piezas especificadas
     for (let i = 0; i < cantidad; i++) {
         piezas.push({
             id: Date.now() + i,
@@ -50,7 +49,6 @@ agregarBtn.addEventListener('click', () => {
         });
     }
 
-    // Limpiar inputs de dimensiones y cantidad
     nombreInput.value = '';
     anchoInput.value = '';
     altoInput.value = '';
@@ -60,7 +58,6 @@ agregarBtn.addEventListener('click', () => {
     actualizarListaVisual();
 });
 
-// Actualizar la interfaz visual de la lista de piezas
 function actualizarListaVisual() {
     listaPiezasUl.innerHTML = '';
     
@@ -79,13 +76,11 @@ function actualizarListaVisual() {
     });
 }
 
-// Función global para eliminar pieza
 window.eliminarPieza = function(index) {
     piezas.splice(index, 1);
     actualizarListaVisual();
 };
 
-// Evento para calcular y dibujar los cortes en la lámina
 calcularBtn.addEventListener('click', () => {
     if (piezas.length === 0) {
         alert('Agrega al menos una pieza antes de calcular.');
@@ -95,67 +90,102 @@ calcularBtn.addEventListener('click', () => {
     dibujarLaminaYortes();
 });
 
-// Variable para el espesor del disco de  la sierra en milímetros (Merma)
-const MERMA_SIERRA = 3; // Puedes ajustarlo a 3mm, 4mm, etc.
-
-// Lógica para pintar la lámina y acomodar las piezas considerando la merma
+// Algoritmo mejorado de distribución en espacios libres
 function dibujarLaminaYortes() {
-    // 1. Limpiar el canvas (Dibujar la lámina de MDF vacía)
     ctx.fillStyle = '#fdfbf7'; 
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Dibujar borde exterior de la lámina
-    ctx.strokeStyle = '#2c3e50';
+    ctx.strokeStyle = '#0056b3';
     ctx.lineWidth = 3;
     ctx.strokeRect(0, 0, canvas.width, canvas.height);
 
-    // 2. Ordenar piezas de mayor a menor altura
-    let piezasOrdenadas = [...piezas].sort((a, b) => b.alto - a.alto);
+    // Ordenar piezas de mayor a menor área para optimizar el acomodo inicial
+    let piezasOrdenadas = [...piezas].sort((a, b) => (b.ancho * b.alto) - (a.ancho * a.alto));
 
-    let cursorX = 10; 
-    let cursorY = 10;
-    let alturaFilaActual = 0;
+    // Lista de espacios libres disponibles en la lámina
+    let espaciosLibres = [{
+        x: 10,
+        y: 10,
+        ancho: LAMINA_ANCHO - 20,
+        alto: LAMINA_ALTO - 20
+    }];
 
     piezasOrdenadas.forEach((pieza) => {
-        let pAncho = pieza.ancho * ESCALA;
-        let pAlto = pieza.alto * ESCALA;
-        let mermaEscala = MERMA_SIERRA * ESCALA;
+        let pAncho = pieza.ancho + MERMA_SIERRA;
+        let pAlto = pieza.alto + MERMA_SIERRA;
 
-        // Verificar si la pieza cabe en la línea actual (considerando la merma horizontal)
-        if (cursorX + pAncho > canvas.width - 10) {
-            cursorX = 10;
-            cursorY += alturaFilaActual + mermaEscala + 10; 
-            alturaFilaActual = 0;
+        let mejorEspacioIndex = -1;
+        let esRotada = false;
+
+        // Buscar el primer espacio libre donde quepa la pieza (First Fit)
+        for (let i = 0; i < espaciosLibres.length; i++) {
+            let espacio = espaciosLibres[i];
+            
+            // Probar posición normal
+            if (pAncho <= espacio.ancho && pAlto <= espacio.alto) {
+                mejorEspacioIndex = i;
+                esRotada = false;
+                break;
+            }
+            // Probar rotada (girada 90 grados por si entra mejor)
+            else if (pAlto <= espacio.ancho && pAncho <= espacio.alto) {
+                mejorEspacioIndex = i;
+                esRotada = true;
+                break;
+            }
         }
 
-        // Verificar si se sale del alto total de la lámina
-        if (cursorY + pAlto > canvas.height - 10) {
-            console.warn(`La pieza "${pieza.nombre}" no cabe en esta lámina.`);
-            return; 
+        if (mejorEspacioIndex === -1) {
+            console.warn(`La pieza "${pieza.nombre}" no cabe en los espacios libres restantes.`);
+            return;
         }
 
-        // Dibujar el rectángulo de la pieza cortada
-        ctx.fillStyle = 'rgba(52, 152, 219, 0.25)';
-        ctx.fillRect(cursorX, cursorY, pAncho, pAlto);
+        let espacio = espaciosLibres[mejorEspacioIndex];
+        let anchoFinal = esRotada ? pAlto : pAncho;
+        let altoFinal = esRotada ? pAncho : pAlto;
 
-        ctx.strokeStyle = '#2980b9';
+        // Dibujar la pieza en el canvas
+        let drawX = espacio.x;
+        let drawY = espacio.y;
+        let drawW = (esRotada ? pieza.alto : pieza.ancho) * escala;
+        let drawH = (esRotada ? pieza.ancho : pieza.alto) * escala;
+
+        ctx.fillStyle = 'rgba(0, 86, 179, 0.15)';
+        ctx.fillRect(drawX * escala, drawY * escala, drawW, drawH);
+
+        ctx.strokeStyle = '#0056b3';
         ctx.lineWidth = 1.5;
-        ctx.strokeRect(cursorX, cursorY, pAncho, pAlto);
+        ctx.strokeRect(drawX * escala, drawY * escala, drawW, drawH);
 
-        // Escribir el nombre y medidas dentro de la pieza
         ctx.fillStyle = '#1a252f';
         ctx.font = '11px Arial';
-        ctx.fillText(pieza.nombre, cursorX + 5, cursorY + 15);
+        ctx.fillText(pieza.nombre, (drawX * escala) + 5, (drawY * escala) + 15);
         ctx.font = '10px Arial';
-        ctx.fillText(`${pieza.ancho}x${pieza.alto} mm`, cursorX + 5, cursorY + 30);
+        ctx.fillText(`${pieza.ancho}x${pieza.alto} mm`, (drawX * escala) + 5, (drawY * escala) + 30);
 
-        // Actualizar cursores sumando el ancho de la pieza + la merma de la sierra
-        cursorX += pAncho + mermaEscala; 
-        if (pAlto > alturaFilaActual) {
-            alturaFilaActual = pAlto;
+        // Subdividir el espacio restante (Generar nuevos rectángulos libres)
+        espaciosLibres.splice(mejorEspacioIndex, 1);
+
+        // Espacio a la derecha de la pieza colocada
+        if (espacio.ancho > anchoFinal) {
+            espaciosLibres.push({
+                x: espacio.x + anchoFinal,
+                y: espacio.y,
+                ancho: espacio.ancho - anchoFinal,
+                alto: altoFinal
+            });
+        }
+
+        // Espacio debajo de la pieza colocada
+        if (espacio.alto > altoFinal) {
+            espaciosLibres.push({
+                x: espacio.x,
+                y: espacio.y + altoFinal,
+                ancho: espacio.ancho,
+                alto: espacio.alto - altoFinal
+            });
         }
     });
 }
 
-// Inicializar lista vacía al cargar
 actualizarListaVisual();
