@@ -12,16 +12,16 @@ const calcularBtn = document.getElementById('calcularBtn');
 const canvas = document.getElementById('canvasLamina');
 const ctx = canvas.getContext('2d');
 
-// Dimensiones reales del MDF en milímetros
-const LAMINA_ANCHO = 1220;
-const LAMINA_ALTO = 2440;
+// Dimensiones reales de la lámina de MDF en milímetros
+const LAMINA_ANCHO = 2440; // Ahora lo manejamos apaisado (largo como base visual)
+const LAMINA_ALTO = 1220; 
 const MERMA_SIERRA = 3; // Espesor del disco de la sierra en mm
 
-// Escala para dibujar en el canvas
-const escala = 0.5; 
+// Escala optimizada para vista horizontal (cabe perfecto en pantallas estándar)
+const escala = 0.35; 
 
 canvas.width = LAMINA_ANCHO * escala; 
-canvas.height = LAMINA_ALTO * escala; 
+canvas.height = LAMINA_ALTO * escala;
 
 // Evento para agregar pieza a la lista
 agregarBtn.addEventListener('click', () => {
