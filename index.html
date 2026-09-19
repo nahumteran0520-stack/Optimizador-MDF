@@ -3,35 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Optimizador de Cortes MDF (1.22 x 2.44)</title>
+    <title>Optimizador de Cortes MDF | Industrial Suite</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Optimizador de Cortes para MDF</h1>
-        <p>Lámina estándar: 1220 mm x 2440 mm</p>
 
-        <div class="form-group">
-            <h3>Agregar Pieza</h3>
-            <input type="text" id="nombrePieza" placeholder="Nombre (ej. Puerta lateral)">
-            <input type="number" id="anchoPieza" placeholder="Ancho (mm)">
-            <input type="number" id="altoPieza" placeholder="Alto (mm)">
-            <input type="number" id="cantidadPieza" placeholder="Cantidad" value="1">
-            <button id="agregarBtn">Añadir a la lista</button>
+    <!-- Barra Superior Industrial / Header Corporativo -->
+    <header class="app-header">
+        <div class="header-content">
+            <span class="logo-icon">🪚</span>
+            <div>
+                <h1>Optimizador Industrial de MDF</h1>
+                <p class="subtitle">Sistema de patronaje y corte de alta eficiencia</p>
+            </div>
         </div>
+        <div class="badge-specs">
+            Lámina Estándar: <strong>1220 x 2440 mm</strong> | Kerf: <strong>3 mm</strong>
+        </div>
+    </header>
 
-        <div class="listado">
-            <h3>Piezas Solicitadas</h3>
+    <main class="container">
+        <!-- Sección de Ingreso de Piezas -->
+        <section class="card">
+            <h2>Gestión de Piezas</h2>
+            <div class="form-group">
+                <div class="input-field">
+                    <label>Nombre o Etiqueta</label>
+                    <input type="text" id="nombrePieza" placeholder="Ej. Puerta lateral">
+                </div>
+                <div class="input-field">
+                    <label>Ancho (mm)</label>
+                    <input type="number" id="anchoPieza" placeholder="0.00">
+                </div>
+                <div class="input-field">
+                    <label>Alto (mm)</label>
+                    <input type="number" id="altoPieza" placeholder="0.00">
+                </div>
+                <div class="input-field">
+                    <label>Cantidad</label>
+                    <input type="number" id="cantidadPieza" value="1" min="1">
+                </div>
+                <button id="agregarBtn" class="btn-primary-yellow">+ Añadir Pieza</button>
+            </div>
+        </section>
+
+        <!-- Lista de Solicitudes -->
+        <section class="card">
+            <h2>Piezas Solicitadas para Corte</h2>
             <ul id="listaPiezas"></ul>
-           <button id="calcularBtn">Calcular Cortes</button>
-        </div>
+            <button id="calcularBtn" class="btn-action-blue">Calcular Patrón de Corte</button>
+        </section>
 
-        <div class="resultado">
-            <h3>Diagrama de Corte</h3>
-            <!-- Aquí dibujaremos la lámina con los cortes -->
-            <canvas id="canvasLamina" width="610" height="1220" style="border:2px solid #000; background: #f9f9f9;"></canvas>
-        </div>
-    </div>
+        <!-- Área de Diagrama / Resultados -->
+        <section class="card resultado-card">
+            <h2>Diagrama de Despiece (1:2)</h2>
+            <p class="canvas-info">Visualización esquemática del aprovechamiento de la placa de MDF.</p>
+            <div class="canvas-wrapper">
+                <canvas id="canvasLamina"></canvas>
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <p>Optimizador de Cortes MDF &copy; 2026 — Módulo de Ingeniería de Taller</p>
+    </footer>
 
     <script src="app.js"></script>
 </body>
