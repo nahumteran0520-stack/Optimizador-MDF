@@ -95,10 +95,13 @@ calcularBtn.addEventListener('click', () => {
     dibujarLaminaYortes();
 });
 
-// Lógica inicial para pintar la lámina y acomodar las piezas visualmente
+// Variable para el espesor del disco de  la sierra en milímetros (Merma)
+const MERMA_SIERRA = 3; // Puedes ajustarlo a 3mm, 4mm, etc.
+
+// Lógica para pintar la lámina y acomodar las piezas considerando la merma
 function dibujarLaminaYortes() {
     // 1. Limpiar el canvas (Dibujar la lámina de MDF vacía)
-    ctx.fillStyle = '#fdfbf7'; // Color símil madera clara / fondo limpio
+    ctx.fillStyle = '#fdfbf7'; 
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Dibujar borde exterior de la lámina
@@ -106,22 +109,22 @@ function dibujarLaminaYortes() {
     ctx.lineWidth = 3;
     ctx.strokeRect(0, 0, canvas.width, canvas.height);
 
-    // 2. Ordenar piezas de mayor a menor altura (algoritmo básico tipo "shelf" / filas)
+    // 2. Ordenar piezas de mayor a menor altura
     let piezasOrdenadas = [...piezas].sort((a, b) => b.alto - a.alto);
 
-    let cursorX = 10; // Margen inicial
+    let cursorX = 10; 
     let cursorY = 10;
     let alturaFilaActual = 0;
 
     piezasOrdenadas.forEach((pieza) => {
         let pAncho = pieza.ancho * ESCALA;
         let pAlto = pieza.alto * ESCALA;
+        let mermaEscala = MERMA_SIERRA * ESCALA;
 
-        // Verificar si la pieza cabe en la línea actual (ancho de la lámina)
+        // Verificar si la pieza cabe en la línea actual (considerando la merma horizontal)
         if (cursorX + pAncho > canvas.width - 10) {
-            // Pasar a la siguiente línea/fila
             cursorX = 10;
-            cursorY += alturaFilaActual + 10; // Espacio de separación entre filas
+            cursorY += alturaFilaActual + mermaEscala + 10; 
             alturaFilaActual = 0;
         }
 
@@ -132,7 +135,7 @@ function dibujarLaminaYortes() {
         }
 
         // Dibujar el rectángulo de la pieza cortada
-        ctx.fillStyle = 'rgba(52, 152, 219, 0.2)';
+        ctx.fillStyle = 'rgba(52, 152, 219, 0.25)';
         ctx.fillRect(cursorX, cursorY, pAncho, pAlto);
 
         ctx.strokeStyle = '#2980b9';
@@ -144,10 +147,10 @@ function dibujarLaminaYortes() {
         ctx.font = '11px Arial';
         ctx.fillText(pieza.nombre, cursorX + 5, cursorY + 15);
         ctx.font = '10px Arial';
-        ctx.fillText(`${pieza.ancho}x${pieza.alto}`, cursorX + 5, cursorY + 30);
+        ctx.fillText(`${pieza.ancho}x${pieza.alto} mm`, cursorX + 5, cursorY + 30);
 
-        // Actualizar cursores
-        cursorX += pAncho + 10; // Espacio de separación horizontal entre piezas
+        // Actualizar cursores sumando el ancho de la pieza + la merma de la sierra
+        cursorX += pAncho + mermaEscala; 
         if (pAlto > alturaFilaActual) {
             alturaFilaActual = pAlto;
         }
