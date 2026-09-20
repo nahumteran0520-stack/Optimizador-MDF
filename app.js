@@ -20,10 +20,11 @@ const LAMINA_ALTO = 244;  // cm
 const MERMA_SIERRA = 0.3; // 0.3 cm (Exactamente 3 milímetros de espesor de disco)
 
 // Escala adaptada para visualización gráfica cómoda
-const escala = 3.5; 
+const escala = 2.5; 
 
-// Configuramos el ancho base del canvas
-canvas.width = LAMINA_ALTO * escala;  // 244 * 3.5 = 854 px
+// Configuramos el canvas en formato vertical estricto (Ancho x Alto real de la placa)
+canvas.width = LAMINA_ANCHO * escala;  // 122 * 2.5 = 305 px de ancho
+canvas.height = LAMINA_ALTO * escala; // 244 * 2.5 = 610 px de alto
 
 // Evento para agregar pieza a la lista en centímetros reales
 agregarBtn.addEventListener('click', () => {
@@ -96,17 +97,15 @@ resetBtn.addEventListener('click', () => {
         actualizarListaVisual();
         pdfBtn.disabled = true;
         
-        canvas.height = LAMINA_ANCHO * escala;
+        canvas.width = LAMINA_ANCHO * escala;
+        canvas.height = LAMINA_ALTO * escala;
+        
         ctx.fillStyle = '#fdfbf7'; 
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        ctx.save();
-        ctx.translate(canvas.width, 0);
-        ctx.rotate(Math.PI / 2);
         ctx.strokeStyle = '#004b87';
         ctx.lineWidth = 3;
-        ctx.strokeRect(0, 0, LAMINA_ANCHO * escala, LAMINA_ALTO * escala);
-        ctx.restore();
+        ctx.strokeRect(0, 0, canvas.width, canvas.height);
     }
 });
 
@@ -205,9 +204,12 @@ function dibujarTodasLasLaminas() {
         piezasPendientes = piezasNoCaben;
     }
 
-    // Renderizado visual en el canvas vertical
+    // Renderizado visual en el canvas vertical (sin rotaciones forzadas)
     const gapEntreLaminas = 40;
-    const altoLaminaPx = LAMINA_ANCHO * escala;
+    const anchoLaminaPx = LAMINA_ANCHO * escala;
+    const altoLaminaPx = LAMINA_ALTO * escala;
+    
+    canvas.width = anchoLaminaPx;
     canvas.height = (laminas.length * altoLaminaPx) + ((laminas.length + 1) * gapEntreLaminas);
 
     ctx.fillStyle = '#f8fafc';
@@ -217,24 +219,20 @@ function dibujarTodasLasLaminas() {
         let offsetY = gapEntreLaminas + (indexLamina * (altoLaminaPx + gapEntreLaminas));
 
         ctx.save();
-        ctx.translate(canvas.width, offsetY);
-        ctx.rotate(Math.PI / 2);
+        ctx.translate(0, offsetY);
 
-        // Placa MDF
+        // Placa MDF vertical real
         ctx.fillStyle = '#fdfbf7';
-        ctx.fillRect(0, 0, LAMINA_ANCHO * escala, LAMINA_ALTO * escala);
+        ctx.fillRect(0, 0, anchoLaminaPx, altoLaminaPx);
 
         ctx.strokeStyle = '#004b87';
         ctx.lineWidth = 3;
-        ctx.strokeRect(0, 0, LAMINA_ANCHO * escala, LAMINA_ALTO * escala);
+        ctx.strokeRect(0, 0, anchoLaminaPx, altoLaminaPx);
 
         // Etiqueta de la Lámina
-        ctx.save();
-        ctx.rotate(-Math.PI / 2);
         ctx.fillStyle = '#004b87';
-        ctx.font = 'bold 14px Inter, sans-serif';
-        ctx.fillText(`LÁMINA #${indexLamina + 1} (Aprovechamiento Óptimo)`, 15, -15);
-        ctx.restore();
+        ctx.font = 'bold 13px Inter, sans-serif';
+        ctx.fillText(`LÁMINA #${indexLamina + 1} (Aprovechamiento Óptimo)`, 15, 25);
 
         // Dibujar piezas
         laminaPiezas.forEach((pieza) => {
@@ -250,9 +248,9 @@ function dibujarTodasLasLaminas() {
 
             ctx.fillStyle = '#1e293b';
             ctx.font = '11px Inter, sans-serif';
-            ctx.fillText(pieza.nombre, (pieza.x * escala) + 5, (pieza.y * escala) + 15);
+            ctx.fillText(pieza.nombre, (pieza.x * escala) + 5, (pieza.y * escala) + 18);
             ctx.font = '10px Inter, sans-serif';
-            ctx.fillText(`${pieza.anchoCm}x${pieza.altoCm} cm`, (pieza.x * escala) + 5, (pieza.y * escala) + 30);
+            ctx.fillText(`${pieza.anchoCm}x${pieza.altoCm} cm`, (pieza.x * escala) + 5, (pieza.y * escala) + 32);
         });
 
         ctx.restore();
