@@ -13,12 +13,12 @@
         <div class="header-content">
             <span class="logo-icon">🪚</span>
             <div>
-                <h1>Optimizador de Cortes en MDF</h1>
+                <h1>Optimizador Industrial de MDF</h1>
                 <p class="subtitle">Sistema de patronaje y corte de alta eficiencia</p>
             </div>
         </div>
         <div class="badge-specs">
-            Lámina Estándar: <strong>1220 x 2440 mm</strong> | Kerf: <strong>3 mm</strong>
+            Lámina Estándar: <strong>122 x 244 cm</strong> | Kerf: <strong>0.3 cm</strong>
         </div>
     </header>
 
@@ -32,12 +32,12 @@
                     <input type="text" id="nombrePieza" placeholder="Ej. Puerta lateral">
                 </div>
                 <div class="input-field">
-                    <label>Ancho (mm)</label>
-                    <input type="number" id="anchoPieza" placeholder="0.00">
+                    <label>Ancho (cm)</label>
+                    <input type="number" id="anchoPieza" step="0.1" placeholder="0.0">
                 </div>
                 <div class="input-field">
-                    <label>Alto (mm)</label>
-                    <input type="number" id="altoPieza" placeholder="0.00">
+                    <label>Alto (cm)</label>
+                    <input type="number" id="altoPieza" step="0.1" placeholder="0.0">
                 </div>
                 <div class="input-field">
                     <label>Cantidad</label>
@@ -61,7 +61,7 @@
         <!-- Área de Diagrama / Resultados -->
         <section class="card resultado-card">
             <h2>Diagrama de Despiece (1:2)</h2>
-            <p class="canvas-info">Visualización esquemática del aprovechamiento de la placa de MDF.</p>
+            <p class="canvas-info">Visualización esquemática del aprovechamiento de la placa de MDF (Medidas en cm).</p>
             <div class="canvas-wrapper">
                 <canvas id="canvasLamina"></canvas>
             </div>
