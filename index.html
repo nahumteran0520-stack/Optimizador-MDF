@@ -13,7 +13,7 @@
         <div class="header-content">
             <span class="logo-icon">🪚</span>
             <div>
-                <h1>Optimizador Industrial de MDF</h1>
+                <h1>Optimizador de Cortes en MDF</h1>
                 <p class="subtitle">Sistema de patronaje y corte de alta eficiencia</p>
             </div>
         </div>
@@ -43,7 +43,6 @@
                     <label>Cantidad</label>
                     <input type="number" id="cantidadPieza" value="1" min="1">
                 </div>
-                <!-- Botón corregido con clase clara -->
                 <button id="agregarBtn" class="btn-primary-yellow">+ Añadir</button>
             </div>
         </section>
@@ -54,6 +53,7 @@
             <ul id="listaPiezas"></ul>
             <div class="action-buttons">
                 <button id="calcularBtn" class="btn-action-blue">Calcular Patrón de Corte</button>
+                <button id="pdfBtn" class="btn-action-green" disabled>📄 Exportar a PDF</button>
                 <button id="resetBtn" class="btn-action-danger">Limpiar Todo</button>
             </div>
         </section>
