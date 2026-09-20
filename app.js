@@ -9,6 +9,7 @@ const cantidadInput = document.getElementById('cantidadPieza');
 const agregarBtn = document.getElementById('agregarBtn');
 const listaPiezasUl = document.getElementById('listaPiezas');
 const calcularBtn = document.getElementById('calcularBtn');
+const resetBtn = document.getElementById('resetBtn'); // Referencia al nuevo botón
 const canvas = document.getElementById('canvasLamina');
 const ctx = canvas.getContext('2d');
 
@@ -59,10 +60,10 @@ agregarBtn.addEventListener('click', () => {
     cantidadInput.value = '1';
     nombreInput.focus();
 
-    actualizarListaVerticalLista();
+    actualizarListaVisual();
 });
 
-function actualizarListaVerticalLista() {
+function actualizarListaVisual() {
     listaPiezasUl.innerHTML = '';
     
     if (piezas.length === 0) {
@@ -82,8 +83,29 @@ function actualizarListaVerticalLista() {
 
 window.eliminarPieza = function(index) {
     piezas.splice(index, 1);
-    actualizarListaVerticalLista();
+    actualizarListaVisual();
 };
+
+// Evento para limpiar todo (Resetear)
+resetBtn.addEventListener('click', () => {
+    if (confirm('¿Estás seguro de que deseas eliminar todas las piezas de la lista?')) {
+        piezas = [];
+        actualizarListaVisual();
+        
+        // Limpiar el canvas gráficamente
+        ctx.fillStyle = '#fdfbf7'; 
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Redibujar marco base vacío
+        ctx.save();
+        ctx.translate(canvas.width, 0);
+        ctx.rotate(Math.PI / 2);
+        ctx.strokeStyle = '#004b87';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(0, 0, LAMINA_ANCHO * escala, LAMINA_ALTO * escala);
+        ctx.restore();
+    }
+});
 
 calcularBtn.addEventListener('click', () => {
     if (piezas.length === 0) {
@@ -94,12 +116,11 @@ calcularBtn.addEventListener('click', () => {
     dibujarLaminaYortes();
 });
 
-// Algoritmo de empaquetado optimizado con soporte para canales verticales largos
+// Algoritmo de empaquetado con soporte optimizado para canales verticales
 function dibujarLaminaYortes() {
     ctx.fillStyle = '#fdfbf7'; 
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Rotamos el contexto para visualización horizontal
     ctx.save();
     ctx.translate(canvas.width, 0);
     ctx.rotate(Math.PI / 2);
@@ -108,10 +129,8 @@ function dibujarLaminaYortes() {
     ctx.lineWidth = 3;
     ctx.strokeRect(0, 0, LAMINA_ANCHO * escala, LAMINA_ALTO * escala);
 
-    // Ordenar piezas de mayor a menor área para empaquetado eficiente
     let piezasOrdenadas = [...piezas].sort((a, b) => (b.ancho * b.alto) - (a.ancho * a.alto));
 
-    // Gestionar bloques libres mediante rectángulos disponibles (MaxRects mejorado y tolerante)
     let espaciosLibres = [{
         x: 10,
         y: 10,
@@ -126,7 +145,6 @@ function dibujarLaminaYortes() {
         let mejorEspacioIndex = -1;
         let esRotada = false;
 
-        // Buscar el mejor espacio libre (el que tenga menor área sobrante o el primero que ajuste)
         for (let i = 0; i < espaciosLibres.length; i++) {
             let espacio = espaciosLibres[i];
             
@@ -153,7 +171,6 @@ function dibujarLaminaYortes() {
         let drawW = (esRotada ? pieza.alto : pieza.ancho) * escala;
         let drawH = (esRotada ? pieza.ancho : pieza.alto) * escala;
 
-        // Dibujar la pieza en el canvas
         ctx.fillStyle = 'rgba(0, 75, 135, 0.15)';
         ctx.fillRect(espacio.x * escala, espacio.y * escala, drawW, drawH);
 
@@ -167,11 +184,8 @@ function dibujarLaminaYortes() {
         ctx.font = '10px Inter, sans-serif';
         ctx.fillText(`${pieza.ancho}x${pieza.alto} mm`, (espacio.x * escala) + 5, (espacio.y * escala) + 30);
 
-        // Remover el espacio utilizado
         espaciosLibres.splice(mejorEspacioIndex, 1);
 
-        // Generar nuevos espacios libres resultantes (subdivisión limpia en L)
-        // 1. Espacio a la derecha del bloque colocado
         if (espacio.ancho > anchoFinal) {
             espaciosLibres.push({
                 x: espacio.x + anchoFinal,
@@ -181,7 +195,6 @@ function dibujarLaminaYortes() {
             });
         }
 
-        // 2. Espacio debajo del bloque colocado (del ancho exacto de la pieza colocada)
         if (espacio.alto > altoFinal) {
             espaciosLibres.push({
                 x: espacio.x,
@@ -195,4 +208,4 @@ function dibujarLaminaYortes() {
     ctx.restore();
 }
 
-actualizarListaVerticalLista();
+actualizarListaVisual();
