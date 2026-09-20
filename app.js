@@ -9,7 +9,8 @@ const cantidadInput = document.getElementById('cantidadPieza');
 const agregarBtn = document.getElementById('agregarBtn');
 const listaPiezasUl = document.getElementById('listaPiezas');
 const calcularBtn = document.getElementById('calcularBtn');
-const resetBtn = document.getElementById('resetBtn'); // Referencia al nuevo botón
+const pdfBtn = document.getElementById('pdfBtn'); // Referencia al botón PDF
+const resetBtn = document.getElementById('resetBtn'); 
 const canvas = document.getElementById('canvasLamina');
 const ctx = canvas.getContext('2d');
 
@@ -68,6 +69,7 @@ function actualizarListaVisual() {
     
     if (piezas.length === 0) {
         listaPiezasUl.innerHTML = '<li style="justify-content: center; color: #888;">No hay piezas agregadas aún.</li>';
+        pdfBtn.disabled = true; // Desactivar PDF si no hay piezas
         return;
     }
 
@@ -91,12 +93,11 @@ resetBtn.addEventListener('click', () => {
     if (confirm('¿Estás seguro de que deseas eliminar todas las piezas de la lista?')) {
         piezas = [];
         actualizarListaVisual();
+        pdfBtn.disabled = true;
         
-        // Limpiar el canvas gráficamente
         ctx.fillStyle = '#fdfbf7'; 
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Redibujar marco base vacío
         ctx.save();
         ctx.translate(canvas.width, 0);
         ctx.rotate(Math.PI / 2);
@@ -114,6 +115,12 @@ calcularBtn.addEventListener('click', () => {
     }
 
     dibujarLaminaYortes();
+    pdfBtn.disabled = false; // Habilitar el botón de exportar PDF al calcular
+});
+
+// Evento del botón Exportar a PDF
+pdfBtn.addEventListener('click', () => {
+    window.print(); // Abre el diálogo nativo del navegador configurado perfectamente para PDF
 });
 
 // Algoritmo de empaquetado con soporte optimizado para canales verticales
