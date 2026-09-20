@@ -267,11 +267,22 @@ input:focus {
     overflow-x: auto;
 }
 
-canvas {
+/* --- Corrección Definitiva para el Canvas Vertical de la Lámina de MDF --- */
+#canvasLamina {
+    width: auto !important;
+    max-width: 100% !important;
+    height: auto !important;
+    display: block;
+    margin: 0 auto;
+    background-color: #fdfbf7;
     border: 3px solid var(--primary-blue);
-    background: #ffffff;
     box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     border-radius: 4px;
+}
+
+canvas {
+    max-width: 100%;
+    height: auto;
 }
 
 .app-footer {
@@ -312,22 +323,4 @@ canvas {
         border: 2px solid #000;
         box-shadow: none;
     }
-}
-/* Selector específico para corregir la proporción de la lámina en el canvas */
-#canvasLamina {
-    width: 100% !important;
-    height: auto !important;
-    max-width: 100%;
-    display: block;
-    margin: 0 auto;
-    background-color: #fdfbf7;
-    border: 3px solid var(--primary-blue);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    border-radius: 4px;
-}
-
-/* Regla general por si usas otros canvas en el futuro */
-canvas {
-    max-width: 100%;
-    height: auto;
 }
