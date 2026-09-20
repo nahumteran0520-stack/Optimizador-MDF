@@ -12,7 +12,7 @@ const calcularBtn = document.getElementById('calcularBtn');
 const canvas = document.getElementById('canvasLamina');
 const ctx = canvas.getContext('2d');
 
-// Dimensiones REALES de la lámina de MDF en milímetros (Ancho: 1220, Alto: 2440)
+// Dimensiones de la lámina de MDF en milímetros (Ancho: 1220, Alto: 2440)
 const LAMINA_ANCHO = 1220;
 const LAMINA_ALTO = 2440;
 const MERMA_SIERRA = 3; // Espesor del disco de la sierra en mm
@@ -20,9 +20,9 @@ const MERMA_SIERRA = 3; // Espesor del disco de la sierra en mm
 // Escala adaptada para visualización horizontal cómoda
 const escala = 0.35; 
 
-// INTERCAMBIAMOS el ancho y alto del canvas para que se vea HORIZONTALmente en pantalla
-canvas.width = LAMINA_ALTO * escala;  // 2440 * 0.35 = 854px de ancho visual
-canvas.height = LAMINA_ANCHO * escala; // 1220 * 0.35 = 427px de alto visual
+// Configuramos el canvas horizontalmente
+canvas.width = LAMINA_ALTO * escala;  // 2440 * 0.35 = 854px
+canvas.height = LAMINA_ANCHO * escala; // 1220 * 0.35 = 427px
 
 // Evento para agregar pieza a la lista
 agregarBtn.addEventListener('click', () => {
@@ -36,8 +36,6 @@ agregarBtn.addEventListener('click', () => {
         return;
     }
 
-    // Validación correcta contra las medidas reales de la lámina (1220 x 2440)
-    // Permite que la pieza entre si cabe de forma normal o rotada
     const cabeNormal = (ancho <= LAMINA_ANCHO && alto <= LAMINA_ALTO);
     const cabeRotada = (alto <= LAMINA_ANCHO && ancho <= LAMINA_ALTO);
 
@@ -61,10 +59,10 @@ agregarBtn.addEventListener('click', () => {
     cantidadInput.value = '1';
     nombreInput.focus();
 
-    actualizarListaVisual();
+    actualizarListaVerticalLista();
 });
 
-function actualizarListaVisual() {
+function actualizarListaVerticalLista() {
     listaPiezasUl.innerHTML = '';
     
     if (piezas.length === 0) {
@@ -84,7 +82,7 @@ function actualizarListaVisual() {
 
 window.eliminarPieza = function(index) {
     piezas.splice(index, 1);
-    actualizarListaVisual();
+    actualizarListaVerticalLista();
 };
 
 calcularBtn.addEventListener('click', () => {
@@ -96,12 +94,12 @@ calcularBtn.addEventListener('click', () => {
     dibujarLaminaYortes();
 });
 
-// Algoritmo de distribución adaptado para renderizado horizontal rotado
+// Algoritmo de empaquetado optimizado con soporte para canales verticales largos
 function dibujarLaminaYortes() {
     ctx.fillStyle = '#fdfbf7'; 
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Rotamos el contexto del canvas 90 grados para que el plano aparezca horizontal
+    // Rotamos el contexto para visualización horizontal
     ctx.save();
     ctx.translate(canvas.width, 0);
     ctx.rotate(Math.PI / 2);
@@ -110,9 +108,10 @@ function dibujarLaminaYortes() {
     ctx.lineWidth = 3;
     ctx.strokeRect(0, 0, LAMINA_ANCHO * escala, LAMINA_ALTO * escala);
 
-    // Ordenar piezas de mayor a menor área
+    // Ordenar piezas de mayor a menor área para empaquetado eficiente
     let piezasOrdenadas = [...piezas].sort((a, b) => (b.ancho * b.alto) - (a.ancho * a.alto));
 
+    // Gestionar bloques libres mediante rectángulos disponibles (MaxRects mejorado y tolerante)
     let espaciosLibres = [{
         x: 10,
         y: 10,
@@ -127,6 +126,7 @@ function dibujarLaminaYortes() {
         let mejorEspacioIndex = -1;
         let esRotada = false;
 
+        // Buscar el mejor espacio libre (el que tenga menor área sobrante o el primero que ajuste)
         for (let i = 0; i < espaciosLibres.length; i++) {
             let espacio = espaciosLibres[i];
             
@@ -150,49 +150,49 @@ function dibujarLaminaYortes() {
         let anchoFinal = esRotada ? pAlto : pAncho;
         let altoFinal = esRotada ? pAncho : pAlto;
 
-        let drawX = espacio.x;
-        let drawY = espacio.y;
         let drawW = (esRotada ? pieza.alto : pieza.ancho) * escala;
         let drawH = (esRotada ? pieza.ancho : pieza.alto) * escala;
 
-        // Dibujar rectángulo de la pieza
+        // Dibujar la pieza en el canvas
         ctx.fillStyle = 'rgba(0, 75, 135, 0.15)';
-        ctx.fillRect(drawX * escala, drawY * escala, drawW, drawH);
+        ctx.fillRect(espacio.x * escala, espacio.y * escala, drawW, drawH);
 
         ctx.strokeStyle = '#004b87';
         ctx.lineWidth = 1.5;
-        ctx.strokeRect(drawX * escala, drawY * escala, drawW, drawH);
+        ctx.strokeRect(espacio.x * escala, espacio.y * escala, drawW, drawH);
 
-        // Texto descriptivo dentro de la pieza
         ctx.fillStyle = '#1e293b';
         ctx.font = '11px Inter, sans-serif';
-        ctx.fillText(pieza.nombre, (drawX * escala) + 5, (drawY * escala) + 15);
+        ctx.fillText(pieza.nombre, (espacio.x * escala) + 5, (espacio.y * escala) + 15);
         ctx.font = '10px Inter, sans-serif';
-        ctx.fillText(`${pieza.ancho}x${pieza.alto} mm`, (drawX * escala) + 5, (drawY * escala) + 30);
+        ctx.fillText(`${pieza.ancho}x${pieza.alto} mm`, (espacio.x * escala) + 5, (espacio.y * escala) + 30);
 
+        // Remover el espacio utilizado
         espaciosLibres.splice(mejorEspacioIndex, 1);
 
+        // Generar nuevos espacios libres resultantes (subdivisión limpia en L)
+        // 1. Espacio a la derecha del bloque colocado
         if (espacio.ancho > anchoFinal) {
             espaciosLibres.push({
                 x: espacio.x + anchoFinal,
                 y: espacio.y,
                 ancho: espacio.ancho - anchoFinal,
-                alto: altoFinal
+                alto: espacio.alto
             });
         }
 
+        // 2. Espacio debajo del bloque colocado (del ancho exacto de la pieza colocada)
         if (espacio.alto > altoFinal) {
             espaciosLibres.push({
                 x: espacio.x,
                 y: espacio.y + altoFinal,
-                ancho: espacio.ancho,
+                ancho: anchoFinal,
                 alto: espacio.alto - altoFinal
             });
         }
     });
 
-    // Restaurar la rotación original del canvas
     ctx.restore();
 }
 
-actualizarListaVisual();
+actualizarListaVerticalLista();
