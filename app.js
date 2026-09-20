@@ -9,7 +9,7 @@ const cantidadInput = document.getElementById('cantidadPieza');
 const agregarBtn = document.getElementById('agregarBtn');
 const listaPiezasUl = document.getElementById('listaPiezas');
 const calcularBtn = document.getElementById('calcularBtn');
-const pdfBtn = document.getElementById('pdfBtn'); // Referencia al botón PDF
+const pdfBtn = document.getElementById('pdfBtn');
 const resetBtn = document.getElementById('resetBtn'); 
 const canvas = document.getElementById('canvasLamina');
 const ctx = canvas.getContext('2d');
@@ -69,7 +69,7 @@ function actualizarListaVisual() {
     
     if (piezas.length === 0) {
         listaPiezasUl.innerHTML = '<li style="justify-content: center; color: #888;">No hay piezas agregadas aún.</li>';
-        pdfBtn.disabled = true; // Desactivar PDF si no hay piezas
+        pdfBtn.disabled = true;
         return;
     }
 
@@ -115,15 +115,14 @@ calcularBtn.addEventListener('click', () => {
     }
 
     dibujarLaminaYortes();
-    pdfBtn.disabled = false; // Habilitar el botón de exportar PDF al calcular
+    pdfBtn.disabled = false;
 });
 
-// Evento del botón Exportar a PDF
 pdfBtn.addEventListener('click', () => {
-    window.print(); // Abre el diálogo nativo del navegador configurado perfectamente para PDF
+    window.print();
 });
 
-// Algoritmo de empaquetado con soporte optimizado para canales verticales
+// Algoritmo de empaquetado optimizado por contenedores rectangulares libres (Bin Packing robusto)
 function dibujarLaminaYortes() {
     ctx.fillStyle = '#fdfbf7'; 
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -136,13 +135,16 @@ function dibujarLaminaYortes() {
     ctx.lineWidth = 3;
     ctx.strokeRect(0, 0, LAMINA_ANCHO * escala, LAMINA_ALTO * escala);
 
+    // Ordenar piezas de mayor área a menor área
     let piezasOrdenadas = [...piezas].sort((a, b) => (b.ancho * b.alto) - (a.ancho * a.alto));
 
+    // Margen de seguridad inicial dentro de la lámina
+    let margen = 10;
     let espaciosLibres = [{
-        x: 10,
-        y: 10,
-        ancho: LAMINA_ANCHO - 20,
-        alto: LAMINA_ALTO - 20
+        x: margen,
+        y: margen,
+        ancho: LAMINA_ANCHO - (margen * 2),
+        alto: LAMINA_ALTO - (margen * 2)
     }];
 
     piezasOrdenadas.forEach((pieza) => {
@@ -152,6 +154,7 @@ function dibujarLaminaYortes() {
         let mejorEspacioIndex = -1;
         let esRotada = false;
 
+        // Buscar el espacio disponible que mejor ajuste
         for (let i = 0; i < espaciosLibres.length; i++) {
             let espacio = espaciosLibres[i];
             
@@ -167,7 +170,7 @@ function dibujarLaminaYortes() {
         }
 
         if (mejorEspacioIndex === -1) {
-            console.warn(`La pieza "${pieza.nombre}" no cabe en los espacios libres restantes.`);
+            console.warn(`La pieza "${pieza.nombre}" (${pieza.ancho}x${pieza.alto} mm) excede los espacios libres disponibles.`);
             return;
         }
 
@@ -178,6 +181,7 @@ function dibujarLaminaYortes() {
         let drawW = (esRotada ? pieza.alto : pieza.ancho) * escala;
         let drawH = (esRotada ? pieza.ancho : pieza.alto) * escala;
 
+        // Dibujar pieza en el canvas
         ctx.fillStyle = 'rgba(0, 75, 135, 0.15)';
         ctx.fillRect(espacio.x * escala, espacio.y * escala, drawW, drawH);
 
@@ -191,8 +195,11 @@ function dibujarLaminaYortes() {
         ctx.font = '10px Inter, sans-serif';
         ctx.fillText(`${pieza.ancho}x${pieza.alto} mm`, (espacio.x * escala) + 5, (espacio.y * escala) + 30);
 
+        // Remover el espacio usado
         espaciosLibres.splice(mejorEspacioIndex, 1);
 
+        // Generar nuevos rectángulos libres derivados sin desperdiciar canales grandes
+        // 1. Rectángulo a la derecha del bloque colocado
         if (espacio.ancho > anchoFinal) {
             espaciosLibres.push({
                 x: espacio.x + anchoFinal,
@@ -202,11 +209,12 @@ function dibujarLaminaYortes() {
             });
         }
 
+        // 2. Rectángulo debajo del bloque colocado (usando todo el ancho del espacio original)
         if (espacio.alto > altoFinal) {
             espaciosLibres.push({
                 x: espacio.x,
                 y: espacio.y + altoFinal,
-                ancho: anchoFinal,
+                ancho: espacio.ancho,
                 alto: espacio.alto - altoFinal
             });
         }
