@@ -93,7 +93,7 @@ body {
 
 .form-group {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr 110px; /* Ancho fijo óptimo para el botón de añadir */
+    grid-template-columns: 2fr 1fr 1fr 1fr 110px;
     gap: 12px;
     align-items: flex-end;
 }
@@ -164,6 +164,28 @@ input:focus {
 
 .btn-action-blue:hover {
     background-color: #003a6c;
+}
+
+.btn-action-green {
+    background-color: #10b981;
+    color: white;
+    border: none;
+    flex: 1.5;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-action-green:hover:not(:disabled) {
+    background-color: #059669;
+}
+
+.btn-action-green:disabled {
+    background-color: #cbd5e1;
+    cursor: not-allowed;
 }
 
 .btn-action-danger {
@@ -260,4 +282,34 @@ canvas {
     font-size: 12px;
     border-top: 1px solid #cbd5e1;
     margin-top: auto;
+}
+
+/* Estilos específicos para impresión / exportación a PDF limpia */
+@media print {
+    body {
+        background-color: #ffffff;
+    }
+    .app-header, .card:nth-child(1), .action-buttons, .app-footer {
+        display: none !important;
+    }
+    .container {
+        margin: 0;
+        padding: 0;
+        max-width: 100%;
+    }
+    .card {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        margin-bottom: 15px;
+    }
+    .canvas-wrapper {
+        background: transparent;
+        border: none;
+        padding: 0;
+    }
+    canvas {
+        border: 2px solid #000;
+        box-shadow: none;
+    }
 }
