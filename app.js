@@ -14,24 +14,19 @@ const resetBtn = document.getElementById('resetBtn');
 const canvas = document.getElementById('canvasLamina');
 const ctx = canvas.getContext('2d');
 
-// Dimensiones de la lámina de MDF en CENTÍMETROS (Ancho: 122 cm, Alto: 244 cm)
-const LAMINA_ANCHO_CM = 122;
-const LAMINA_ALTO_CM = 244;
-const MERMA_SIERRA_CM = 0.3; // 3 mm equivalen a 0.3 cm
+// Dimensiones de la lámina de MDF en CENTÍMETROS REALES (Ancho: 122 cm, Alto: 244 cm)
+const LAMINA_ANCHO = 122; // cm
+const LAMINA_ALTO = 244;  // cm
+const MERMA_SIERRA = 0.3; // 0.3 cm (Exactamente 3 milímetros de espesor de disco)
 
-// Convertimos a escala interna multiplicando por 10 (trabajando internamente con milímetros para el motor)
-const LAMINA_ANCHO = LAMINA_ANCHO_CM * 10;
-const LAMINA_ALTO = LAMINA_ALTO_CM * 10;
-const MERMA_SIERRA = MERMA_SIERRA_CM * 10;
-
-// Escala adaptada para visualización horizontal cómoda
-const escala = 0.35; 
+// Escala adaptada para visualización horizontal cómoda en el canvas
+const escala = 1.8; 
 
 // Configuramos el canvas horizontalmente
-canvas.width = LAMINA_ALTO * escala;  
-canvas.height = LAMINA_ANCHO * escala; 
+canvas.width = LAMINA_ALTO * escala;  // 244 * escala
+canvas.height = LAMINA_ANCHO * escala; // 122 * escala
 
-// Evento para agregar pieza a la lista (Convierte cm ingresados a milímetros internos)
+// Evento para agregar pieza a la lista en centímetros reales
 agregarBtn.addEventListener('click', () => {
     const nombre = nombreInput.value.trim() || `Pieza ${piezas.length + 1}`;
     const anchoCm = parseFloat(anchoInput.value);
@@ -43,12 +38,8 @@ agregarBtn.addEventListener('click', () => {
         return;
     }
 
-    // Convertir centímetros a unidades internas
-    const ancho = anchoCm * 10;
-    const alto = altoCm * 10;
-
-    const cabeNormal = (ancho <= LAMINA_ANCHO && alto <= LAMINA_ALTO);
-    const cabeRotada = (alto <= LAMINA_ANCHO && ancho <= LAMINA_ALTO);
+    const cabeNormal = (anchoCm <= LAMINA_ANCHO && altoCm <= LAMINA_ALTO);
+    const cabeRotada = (altoCm <= LAMINA_ANCHO && anchoCm <= LAMINA_ALTO);
 
     if (!cabeNormal && !cabeRotada) {
         alert(`¡Advertencia! La pieza "${nombre}" (${anchoCm}x${altoCm} cm) supera las dimensiones máximas de la lámina de MDF (122 x 244 cm).`);
@@ -59,10 +50,10 @@ agregarBtn.addEventListener('click', () => {
         piezas.push({
             id: Date.now() + i,
             nombre: cantidad > 1 ? `${nombre} (${i + 1})` : nombre,
-            anchoCm: anchoCm, // Guardamos en cm para mostrar en la lista
+            anchoCm: anchoCm,
             altoCm: altoCm,
-            ancho: ancho,
-            alto: alto
+            ancho: anchoCm,
+            alto: altoCm
         });
     }
 
@@ -133,7 +124,7 @@ pdfBtn.addEventListener('click', () => {
     window.print();
 });
 
-// Algoritmo de empaquetado optimizado en cm/milímetros internos
+// Algoritmo de empaquetado optimizado en centímetros reales
 function dibujarLaminaYortes() {
     ctx.fillStyle = '#fdfbf7'; 
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -148,7 +139,7 @@ function dibujarLaminaYortes() {
 
     let piezasOrdenadas = [...piezas].sort((a, b) => (b.ancho * b.alto) - (a.ancho * a.alto));
 
-    let margen = 10;
+    let margen = 1.0; // 1 cm de margen perimetral de seguridad en la lámina
     let espaciosLibres = [{
         x: margen,
         y: margen,
