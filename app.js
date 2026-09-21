@@ -19,25 +19,29 @@ const LAMINA_ANCHO = 122; // cm
 const LAMINA_ALTO = 244;  // cm
 const MERMA_SIERRA = 0.3; // 0.3 cm
 
-// Escala fluida
-const escala = 2.5; 
+// Escala grande y detallada para que se vea amplio y claro
+const escala = 3.5; 
 
 function pintarCanvasVacio() {
     if (!canvas || !ctx) return;
     try {
-        canvas.width = LAMINA_ALTO * escala;
-        canvas.height = LAMINA_ANCHO * escala;
+        // Dimensiones horizontales grandes directas (244 x 122 cm)
+        canvas.width = LAMINA_ALTO * escala;  // 244 * 3.5 = 854 px
+        canvas.height = LAMINA_ANCHO * escala; // 122 * 3.5 = 427 px
         
         ctx.fillStyle = '#fdfbf7'; 
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        ctx.save();
-        ctx.translate(canvas.width, 0);
-        ctx.rotate(Math.PI / 2);
         ctx.strokeStyle = '#004b87';
         ctx.lineWidth = 3;
-        ctx.strokeRect(0, 0, LAMINA_ANCHO * escala, LAMINA_ALTO * escala);
-        ctx.restore();
+        ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+        // Texto guía elegante en el cuadro vacío
+        ctx.fillStyle = '#004b87';
+        ctx.font = 'bold 15px Inter, sans-serif';
+        ctx.fillText('LÁMINA DE MDF ESTÁNDAR (244 x 122 cm)', 20, 35);
+        ctx.font = '13px Inter, sans-serif';
+        ctx.fillText('Agrega tus piezas y presiona "Calcular Patrón de Corte"', 20, 60);
     } catch (e) {
         console.error("Error al pintar canvas vacío:", e);
     }
@@ -143,7 +147,7 @@ if (pdfBtn) {
     });
 }
 
-// Algoritmo de empaquetado seguro con control de desbordamiento y bucles
+// Algoritmo de empaquetado optimizado en formato horizontal grande
 function dibujarTodasLasLaminas() {
     if (!canvas || !ctx) return;
 
@@ -158,8 +162,8 @@ function dibujarTodasLasLaminas() {
             let espaciosLibres = [{
                 x: margen,
                 y: margen,
-                ancho: LAMINA_ANCHO - (margen * 2),
-                alto: LAMINA_ALTO - (margen * 2)
+                ancho: LAMINA_ALTO - (margen * 2), // Horizontal: ancho es 244
+                alto: LAMINA_ANCHO - (margen * 2)  // Horizontal: alto es 122
             }];
             
             let piezasEnEstaLamina = [];
@@ -222,20 +226,18 @@ function dibujarTodasLasLaminas() {
                 }
             }
 
-            if (piezasEnEstaLamina.length === 0) {
-                break;
-            }
+            if (piezasEnEstaLamina.length === 0) break;
 
             laminas.push(piezasEnEstaLamina);
             piezasPendientes = piezasNoCaben;
         }
 
-        const gapEntreLaminas = 40;
+        const gapEntreLaminas = 50;
         const altoLaminaPx = LAMINA_ANCHO * escala; 
-        let nuevoAlto = (laminas.length * altoLaminaPx) + ((laminas.length + 1) * gapEntreLaminas);
+        const anchoLaminaPx = LAMINA_ALTO * escala; 
         
-        if (nuevoAlto > 32767) nuevoAlto = 32767;
-        canvas.height = nuevoAlto;
+        canvas.width = anchoLaminaPx;
+        canvas.height = (laminas.length * altoLaminaPx) + ((laminas.length + 1) * gapEntreLaminas);
 
         ctx.fillStyle = '#f8fafc';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -244,23 +246,22 @@ function dibujarTodasLasLaminas() {
             let offsetY = gapEntreLaminas + (indexLamina * (altoLaminaPx + gapEntreLaminas));
 
             ctx.save();
-            ctx.translate(canvas.width, offsetY);
-            ctx.rotate(Math.PI / 2);
+            ctx.translate(0, offsetY);
 
+            // Placa MDF horizontal grande
             ctx.fillStyle = '#fdfbf7';
-            ctx.fillRect(0, 0, LAMINA_ANCHO * escala, LAMINA_ALTO * escala);
+            ctx.fillRect(0, 0, anchoLaminaPx, altoLaminaPx);
 
             ctx.strokeStyle = '#004b87';
             ctx.lineWidth = 3;
-            ctx.strokeRect(0, 0, LAMINA_ANCHO * escala, LAMINA_ALTO * escala);
+            ctx.strokeRect(0, 0, anchoLaminaPx, altoLaminaPx);
 
-            ctx.save();
-            ctx.rotate(-Math.PI / 2);
+            // Etiqueta de la Lámina
             ctx.fillStyle = '#004b87';
             ctx.font = 'bold 14px Inter, sans-serif';
-            ctx.fillText(`LÁMINA #${indexLamina + 1} (Aprovechamiento Óptimo)`, 15, -15);
-            ctx.restore();
+            ctx.fillText(`LÁMINA #${indexLamina + 1} (Aprovechamiento Óptimo)`, 15, 25);
 
+            // Dibujar piezas con escala grande y legible
             laminaPiezas.forEach((pieza) => {
                 let drawW = (pieza.esRotada ? pieza.alto : pieza.ancho) * escala;
                 let drawH = (pieza.esRotada ? pieza.ancho : pieza.alto) * escala;
@@ -273,10 +274,10 @@ function dibujarTodasLasLaminas() {
                 ctx.strokeRect(pieza.x * escala, pieza.y * escala, drawW, drawH);
 
                 ctx.fillStyle = '#1e293b';
+                ctx.font = '12px Inter, sans-serif';
+                ctx.fillText(pieza.nombre, (pieza.x * escala) + 6, (pieza.y * escala) + 20);
                 ctx.font = '11px Inter, sans-serif';
-                ctx.fillText(pieza.nombre, (pieza.x * escala) + 5, (pieza.y * escala) + 15);
-                ctx.font = '10px Inter, sans-serif';
-                ctx.fillText(`${pieza.anchoCm}x${pieza.altoCm} cm`, (pieza.x * escala) + 5, (pieza.y * escala) + 30);
+                ctx.fillText(`${pieza.anchoCm} x ${pieza.altoCm} cm`, (pieza.x * escala) + 6, (pieza.y * escala) + 38);
             });
 
             ctx.restore();
@@ -284,10 +285,6 @@ function dibujarTodasLasLaminas() {
     } catch (err) {
         console.error("Error al generar las láminas:", err);
     }
-}
-
-actualizarListaVisual();
-    });
 }
 
 actualizarListaVisual();
