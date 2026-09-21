@@ -12,66 +12,89 @@ const calcularBtn = document.getElementById('calcularBtn');
 const pdfBtn = document.getElementById('pdfBtn');
 const resetBtn = document.getElementById('resetBtn'); 
 const canvas = document.getElementById('canvasLamina');
-const ctx = canvas.getContext('2d');
+const ctx = canvas ? canvas.getContext('2d') : null;
 
 // Dimensiones de la lámina de MDF en CENTÍMETROS REALES (Ancho: 122 cm, Alto: 244 cm)
 const LAMINA_ANCHO = 122; // cm
 const LAMINA_ALTO = 244;  // cm
-const MERMA_SIERRA = 0.3; // 0.3 cm (Exactamente 3 milímetros de espesor de disco)
+const MERMA_SIERRA = 0.3; // 0.3 cm
 
-// Escala grande para que se aprecie con todo detalle en formato horizontal
-const escala = 3.5; 
+// Escala fluida
+const escala = 2.5; 
 
-// Configuramos el ancho base del canvas en horizontal (Landscape grande)
-canvas.width = LAMINA_ALTO * escala;  // 244 * 3.5 = 854 px de ancho base
-canvas.height = LAMINA_ANCHO * escala; // 122 * 3.5 = 427 px de alto inicial
-
-// Evento para agregar pieza a la lista en centímetros reales
-agregarBtn.addEventListener('click', () => {
-    const nombre = nombreInput.value.trim() || `Pieza ${piezas.length + 1}`;
-    const anchoCm = parseFloat(anchoInput.value);
-    const altoCm = parseFloat(altoInput.value);
-    const cantidad = parseInt(cantidadInput.value) || 1;
-
-    if (isNaN(anchoCm) || isNaN(altoCm) || anchoCm <= 0 || altoCm <= 0) {
-        alert('Por favor, ingresa un ancho y un alto válidos en centímetros.');
-        return;
+function pintarCanvasVacio() {
+    if (!canvas || !ctx) return;
+    try {
+        canvas.width = LAMINA_ALTO * escala;
+        canvas.height = LAMINA_ANCHO * escala;
+        
+        ctx.fillStyle = '#fdfbf7'; 
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.save();
+        ctx.translate(canvas.width, 0);
+        ctx.rotate(Math.PI / 2);
+        ctx.strokeStyle = '#004b87';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(0, 0, LAMINA_ANCHO * escala, LAMINA_ALTO * escala);
+        ctx.restore();
+    } catch (e) {
+        console.error("Error al pintar canvas vacío:", e);
     }
+}
 
-    const cabeNormal = (anchoCm <= LAMINA_ANCHO && altoCm <= LAMINA_ALTO);
-    const cabeRotada = (altoCm <= LAMINA_ANCHO && anchoCm <= LAMINA_ALTO);
+pintarCanvasVacio();
 
-    if (!cabeNormal && !cabeRotada) {
-        alert(`¡Advertencia! La pieza "${nombre}" (${anchoCm}x${altoCm} cm) supera las dimensiones máximas de una lámina de MDF (122 x 244 cm).`);
-        return;
-    }
+// Evento para agregar pieza a la lista
+if (agregarBtn) {
+    agregarBtn.addEventListener('click', () => {
+        const nombre = nombreInput.value.trim() || `Pieza ${piezas.length + 1}`;
+        const anchoCm = parseFloat(anchoInput.value);
+        const altoCm = parseFloat(altoInput.value);
+        const cantidad = parseInt(cantidadInput.value) || 1;
 
-    for (let i = 0; i < cantidad; i++) {
-        piezas.push({
-            id: Date.now() + i,
-            nombre: cantidad > 1 ? `${nombre} (${i + 1})` : nombre,
-            anchoCm: anchoCm,
-            altoCm: altoCm,
-            ancho: anchoCm,
-            alto: altoCm
-        });
-    }
+        if (isNaN(anchoCm) || isNaN(altoCm) || anchoCm <= 0 || altoCm <= 0) {
+            alert('Por favor, ingresa un ancho y un alto válidos en centímetros.');
+            return;
+        }
 
-    nombreInput.value = '';
-    anchoInput.value = '';
-    altoInput.value = '';
-    cantidadInput.value = '1';
-    nombreInput.focus();
+        const cabeNormal = (anchoCm <= LAMINA_ANCHO && altoCm <= LAMINA_ALTO);
+        const cabeRotada = (altoCm <= LAMINA_ANCHO && anchoCm <= LAMINA_ALTO);
 
-    actualizarListaVisual();
-});
+        if (!cabeNormal && !cabeRotada) {
+            alert(`¡Advertencia! La pieza "${nombre}" (${anchoCm}x${altoCm} cm) supera las dimensiones máximas de una lámina de MDF (122 x 244 cm).`);
+            return;
+        }
+
+        for (let i = 0; i < cantidad; i++) {
+            piezas.push({
+                id: Date.now() + i,
+                nombre: cantidad > 1 ? `${nombre} (${i + 1})` : nombre,
+                anchoCm: anchoCm,
+                altoCm: altoCm,
+                ancho: anchoCm,
+                alto: altoCm
+            });
+        }
+
+        nombreInput.value = '';
+        anchoInput.value = '';
+        altoInput.value = '';
+        cantidadInput.value = '1';
+        nombreInput.focus();
+
+        actualizarListaVisual();
+    });
+}
 
 function actualizarListaVisual() {
+    if (!listaPiezasUl) return;
     listaPiezasUl.innerHTML = '';
     
     if (piezas.length === 0) {
         listaPiezasUl.innerHTML = '<li style="justify-content: center; color: #888;">No hay piezas agregadas aún.</li>';
-        pdfBtn.disabled = true;
+        if (pdfBtn) pdfBtn.disabled = true;
+        pintarCanvasVacio();
         return;
     }
 
@@ -91,174 +114,179 @@ window.eliminarPieza = function(index) {
 };
 
 // Evento para limpiar todo (Resetear)
-resetBtn.addEventListener('click', () => {
-    if (confirm('¿Estás seguro de que deseas eliminar todas las piezas de la lista?')) {
-        piezas = [];
-        actualizarListaVisual();
-        pdfBtn.disabled = true;
-        
-        canvas.width = LAMINA_ALTO * escala;
-        canvas.height = LAMINA_ANCHO * escala;
-        
-        ctx.fillStyle = '#fdfbf7'; 
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        ctx.save();
-        ctx.translate(canvas.width, 0);
-        ctx.rotate(Math.PI / 2);
-        ctx.strokeStyle = '#004b87';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(0, 0, LAMINA_ANCHO * escala, LAMINA_ALTO * escala);
-        ctx.restore();
-    }
-});
+if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+        if (confirm('¿Estás seguro de que deseas eliminar todas las piezas de la lista?')) {
+            piezas = [];
+            actualizarListaVisual();
+            if (pdfBtn) pdfBtn.disabled = true;
+            pintarCanvasVacio();
+        }
+    });
+}
 
-calcularBtn.addEventListener('click', () => {
-    if (piezas.length === 0) {
-        alert('Agrega al menos una pieza antes de calcular.');
-        return;
-    }
-
-    dibujarTodasLasLaminas();
-    pdfBtn.disabled = false;
-});
-
-pdfBtn.addEventListener('click', () => {
-    window.print();
-});
-
-// Algoritmo de empaquetado optimizado por espacios libres inteligentes (Maximizando aprovechamiento)
-function dibujarTodasLasLaminas() {
-    let piezasPendientes = [...piezas].sort((a, b) => (b.ancho * b.alto) - (a.ancho * a.alto));
-    let laminas = [];
-
-    let margen = 1.0; // 1 cm de margen perimetral de seguridad en la lámina
-
-    while (piezasPendientes.length > 0) {
-        let espaciosLibres = [{
-            x: margen,
-            y: margen,
-            ancho: LAMINA_ANCHO - (margen * 2),
-            alto: LAMINA_ALTO - (margen * 2)
-        }];
-        
-        let piezasEnEstaLamina = [];
-        let piezasNoCaben = [];
-
-        for (let i = 0; i < piezasPendientes.length; i++) {
-            let pieza = piezasPendientes[i];
-            let pAncho = pieza.ancho + MERMA_SIERRA;
-            let pAlto = pieza.alto + MERMA_SIERRA;
-
-            let mejorEspacioIndex = -1;
-            let esRotada = false;
-
-            // Buscamos el espacio donde desperdiciemos menos área sobrante (Best-Fit Area)
-            for (let j = 0; j < espaciosLibres.length; j++) {
-                let espacio = espaciosLibres[j];
-
-                if (pAncho <= espacio.ancho && pAlto <= espacio.alto) {
-                    mejorEspacioIndex = j;
-                    esRotada = false;
-                    break;
-                } else if (pAlto <= espacio.ancho && pAncho <= espacio.alto) {
-                    mejorEspacioIndex = j;
-                    esRotada = true;
-                    break;
-                }
-            }
-
-            if (mejorEspacioIndex !== -1) {
-                let espacio = espaciosLibres[mejorEspacioIndex];
-                let anchoFinal = esRotada ? pAlto : pAncho;
-                let altoFinal = esRotada ? pAncho : pAlto;
-
-                piezasEnEstaLamina.push({
-                    ...pieza,
-                    x: espacio.x,
-                    y: espacio.y,
-                    esRotada: esRotada
-                });
-
-                espaciosLibres.splice(mejorEspacioIndex, 1);
-
-                // Subdivisión limpia de espacios para rellenar los huecos sobrantes con piezas chicas
-                if (espacio.ancho > anchoFinal) {
-                    espaciosLibres.push({
-                        x: espacio.x + anchoFinal,
-                        y: espacio.y,
-                        ancho: espacio.ancho - anchoFinal,
-                        alto: altoFinal
-                    });
-                }
-                if (espacio.alto > altoFinal) {
-                    espaciosLibres.push({
-                        x: espacio.x,
-                        y: espacio.y + altoFinal,
-                        ancho: espacio.ancho,
-                        alto: espacio.alto - altoFinal
-                    });
-                }
-            } else {
-                piezasNoCaben.push(pieza);
-            }
+if (calcularBtn) {
+    calcularBtn.addEventListener('click', () => {
+        if (piezas.length === 0) {
+            alert('Agrega al menos una pieza antes de calcular.');
+            return;
         }
 
-        laminas.push(piezasEnEstaLamina);
-        piezasPendientes = piezasNoCaben;
-    }
+        dibujarTodasLasLaminas();
+        if (pdfBtn) pdfBtn.disabled = false;
+    });
+}
 
-    // Renderizado visual en formato horizontal grande (Landscape detallado)
-    const gapEntreLaminas = 40;
-    const altoLaminaPx = LAMINA_ANCHO * escala; 
-    canvas.height = (laminas.length * altoLaminaPx) + ((laminas.length + 1) * gapEntreLaminas);
+if (pdfBtn) {
+    pdfBtn.addEventListener('click', () => {
+        window.print();
+    });
+}
 
-    ctx.fillStyle = '#f8fafc';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+// Algoritmo de empaquetado seguro con control de desbordamiento y bucles
+function dibujarTodasLasLaminas() {
+    if (!canvas || !ctx) return;
 
-    laminas.forEach((laminaPiezas, indexLamina) => {
-        let offsetY = gapEntreLaminas + (indexLamina * (altoLaminaPx + gapEntreLaminas));
+    try {
+        let piezasPendientes = [...piezas].sort((a, b) => (b.ancho * b.alto) - (a.ancho * a.alto));
+        let laminas = [];
+        let margen = 1.0; 
+        let seguridadBucle = 0;
 
-        ctx.save();
-        ctx.translate(canvas.width, offsetY);
-        ctx.rotate(Math.PI / 2);
+        while (piezasPendientes.length > 0 && seguridadBucle < 100) {
+            seguridadBucle++;
+            let espaciosLibres = [{
+                x: margen,
+                y: margen,
+                ancho: LAMINA_ANCHO - (margen * 2),
+                alto: LAMINA_ALTO - (margen * 2)
+            }];
+            
+            let piezasEnEstaLamina = [];
+            let piezasNoCaben = [];
 
-        // Placa MDF horizontal grande
-        ctx.fillStyle = '#fdfbf7';
-        ctx.fillRect(0, 0, LAMINA_ANCHO * escala, LAMINA_ALTO * escala);
+            for (let i = 0; i < piezasPendientes.length; i++) {
+                let pieza = piezasPendientes[i];
+                let pAncho = pieza.ancho + MERMA_SIERRA;
+                let pAlto = pieza.alto + MERMA_SIERRA;
 
-        ctx.strokeStyle = '#004b87';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(0, 0, LAMINA_ANCHO * escala, LAMINA_ALTO * escala);
+                let mejorEspacioIndex = -1;
+                let esRotada = false;
 
-        // Etiqueta de la Lámina (ajustada para leerse correctamente en landscape)
-        ctx.save();
-        ctx.rotate(-Math.PI / 2);
-        ctx.fillStyle = '#004b87';
-        ctx.font = 'bold 14px Inter, sans-serif';
-        ctx.fillText(`LÁMINA #${indexLamina + 1} (Aprovechamiento Óptimo)`, 15, -15);
-        ctx.restore();
+                for (let j = 0; j < espaciosLibres.length; j++) {
+                    let espacio = espaciosLibres[j];
 
-        // Dibujar piezas con textos bien legibles
-        laminaPiezas.forEach((pieza) => {
-            let drawW = (pieza.esRotada ? pieza.alto : pieza.ancho) * escala;
-            let drawH = (pieza.esRotada ? pieza.ancho : pieza.alto) * escala;
+                    if (pAncho <= espacio.ancho && pAlto <= espacio.alto) {
+                        mejorEspacioIndex = j;
+                        esRotada = false;
+                        break;
+                    } else if (pAlto <= espacio.ancho && pAncho <= espacio.alto) {
+                        mejorEspacioIndex = j;
+                        esRotada = true;
+                        break;
+                    }
+                }
 
-            ctx.fillStyle = 'rgba(0, 75, 135, 0.15)';
-            ctx.fillRect(pieza.x * escala, pieza.y * escala, drawW, drawH);
+                if (mejorEspacioIndex !== -1) {
+                    let espacio = espaciosLibres[mejorEspacioIndex];
+                    let anchoFinal = esRotada ? pAlto : pAncho;
+                    let altoFinal = esRotada ? pAncho : pAlto;
+
+                    piezasEnEstaLamina.push({
+                        ...pieza,
+                        x: espacio.x,
+                        y: espacio.y,
+                        esRotada: esRotada
+                    });
+
+                    espaciosLibres.splice(mejorEspacioIndex, 1);
+
+                    if (espacio.ancho > anchoFinal) {
+                        espaciosLibres.push({
+                            x: espacio.x + anchoFinal,
+                            y: espacio.y,
+                            ancho: espacio.ancho - anchoFinal,
+                            alto: altoFinal
+                        });
+                    }
+                    if (espacio.alto > altoFinal) {
+                        espaciosLibres.push({
+                            x: espacio.x,
+                            y: espacio.y + altoFinal,
+                            ancho: espacio.ancho,
+                            alto: espacio.alto - altoFinal
+                        });
+                    }
+                } else {
+                    piezasNoCaben.push(pieza);
+                }
+            }
+
+            if (piezasEnEstaLamina.length === 0) {
+                break;
+            }
+
+            laminas.push(piezasEnEstaLamina);
+            piezasPendientes = piezasNoCaben;
+        }
+
+        const gapEntreLaminas = 40;
+        const altoLaminaPx = LAMINA_ANCHO * escala; 
+        let nuevoAlto = (laminas.length * altoLaminaPx) + ((laminas.length + 1) * gapEntreLaminas);
+        
+        if (nuevoAlto > 32767) nuevoAlto = 32767;
+        canvas.height = nuevoAlto;
+
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        laminas.forEach((laminaPiezas, indexLamina) => {
+            let offsetY = gapEntreLaminas + (indexLamina * (altoLaminaPx + gapEntreLaminas));
+
+            ctx.save();
+            ctx.translate(canvas.width, offsetY);
+            ctx.rotate(Math.PI / 2);
+
+            ctx.fillStyle = '#fdfbf7';
+            ctx.fillRect(0, 0, LAMINA_ANCHO * escala, LAMINA_ALTO * escala);
 
             ctx.strokeStyle = '#004b87';
-            ctx.lineWidth = 1.5;
-            ctx.strokeRect(pieza.x * escala, pieza.y * escala, drawW, drawH);
+            ctx.lineWidth = 3;
+            ctx.strokeRect(0, 0, LAMINA_ANCHO * escala, LAMINA_ALTO * escala);
 
-            ctx.fillStyle = '#1e293b';
-            ctx.font = '11px Inter, sans-serif';
-            ctx.fillText(pieza.nombre, (pieza.x * escala) + 5, (pieza.y * escala) + 15);
-            ctx.font = '10px Inter, sans-serif';
-            ctx.fillText(`${pieza.anchoCm}x${pieza.altoCm} cm`, (pieza.x * escala) + 5, (pieza.y * escala) + 30);
+            ctx.save();
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillStyle = '#004b87';
+            ctx.font = 'bold 14px Inter, sans-serif';
+            ctx.fillText(`LÁMINA #${indexLamina + 1} (Aprovechamiento Óptimo)`, 15, -15);
+            ctx.restore();
+
+            laminaPiezas.forEach((pieza) => {
+                let drawW = (pieza.esRotada ? pieza.alto : pieza.ancho) * escala;
+                let drawH = (pieza.esRotada ? pieza.ancho : pieza.alto) * escala;
+
+                ctx.fillStyle = 'rgba(0, 75, 135, 0.15)';
+                ctx.fillRect(pieza.x * escala, pieza.y * escala, drawW, drawH);
+
+                ctx.strokeStyle = '#004b87';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(pieza.x * escala, pieza.y * escala, drawW, drawH);
+
+                ctx.fillStyle = '#1e293b';
+                ctx.font = '11px Inter, sans-serif';
+                ctx.fillText(pieza.nombre, (pieza.x * escala) + 5, (pieza.y * escala) + 15);
+                ctx.font = '10px Inter, sans-serif';
+                ctx.fillText(`${pieza.anchoCm}x${pieza.altoCm} cm`, (pieza.x * escala) + 5, (pieza.y * escala) + 30);
+            });
+
+            ctx.restore();
         });
+    } catch (err) {
+        console.error("Error al generar las láminas:", err);
+    }
+}
 
-        ctx.restore();
+actualizarListaVisual();
     });
 }
 
