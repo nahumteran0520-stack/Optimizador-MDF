@@ -14,20 +14,20 @@ const resetBtn = document.getElementById('resetBtn');
 const canvas = document.getElementById('canvasLamina');
 const ctx = canvas ? canvas.getContext('2d') : null;
 
-// Dimensiones de la lámina de MDF en CENTÍMETROS REALES (Ancho: 122 cm, Alto: 244 cm)
+// Dimensiones reales de la lámina estándar de MDF: 122 cm de ancho por 244 cm de alto
 const LAMINA_ANCHO = 122; // cm
 const LAMINA_ALTO = 244;  // cm
 const MERMA_SIERRA = 0.3; // 0.3 cm
 
-// Escala grande y detallada para que se vea amplio y claro
+// Escala grande y detallada
 const escala = 3.5; 
 
 function pintarCanvasVacio() {
     if (!canvas || !ctx) return;
     try {
-        // Dimensiones horizontales grandes directas (244 x 122 cm)
-        canvas.width = LAMINA_ALTO * escala;  // 244 * 3.5 = 854 px
-        canvas.height = LAMINA_ANCHO * escala; // 122 * 3.5 = 427 px
+        // Canvas vertical grande (122 x 244 cm reales)
+        canvas.width = LAMINA_ANCHO * escala;  // 122 * 3.5 = 427 px
+        canvas.height = LAMINA_ALTO * escala; // 244 * 3.5 = 854 px
         
         ctx.fillStyle = '#fdfbf7'; 
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -36,12 +36,12 @@ function pintarCanvasVacio() {
         ctx.lineWidth = 3;
         ctx.strokeRect(0, 0, canvas.width, canvas.height);
 
-        // Texto guía elegante en el cuadro vacío
+        // Texto guía elegante
         ctx.fillStyle = '#004b87';
-        ctx.font = 'bold 15px Inter, sans-serif';
-        ctx.fillText('LÁMINA DE MDF ESTÁNDAR (244 x 122 cm)', 20, 35);
-        ctx.font = '13px Inter, sans-serif';
-        ctx.fillText('Agrega tus piezas y presiona "Calcular Patrón de Corte"', 20, 60);
+        ctx.font = 'bold 14px Inter, sans-serif';
+        ctx.fillText('LÁMINA DE MDF (122 x 244 cm)', 15, 30);
+        ctx.font = '12px Inter, sans-serif';
+        ctx.fillText('Agrega tus piezas y calcula el patrón', 15, 55);
     } catch (e) {
         console.error("Error al pintar canvas vacío:", e);
     }
@@ -147,7 +147,7 @@ if (pdfBtn) {
     });
 }
 
-// Algoritmo de empaquetado optimizado en formato horizontal grande
+// Algoritmo de empaquetado optimizado para lámina vertical (122x244 cm)
 function dibujarTodasLasLaminas() {
     if (!canvas || !ctx) return;
 
@@ -162,8 +162,8 @@ function dibujarTodasLasLaminas() {
             let espaciosLibres = [{
                 x: margen,
                 y: margen,
-                ancho: LAMINA_ALTO - (margen * 2), // Horizontal: ancho es 244
-                alto: LAMINA_ANCHO - (margen * 2)  // Horizontal: alto es 122
+                ancho: LAMINA_ANCHO - (margen * 2), // Ancho real: 122 cm
+                alto: LAMINA_ALTO - (margen * 2)   // Alto real: 244 cm
             }];
             
             let piezasEnEstaLamina = [];
@@ -232,9 +232,9 @@ function dibujarTodasLasLaminas() {
             piezasPendientes = piezasNoCaben;
         }
 
-        const gapEntreLaminas = 50;
-        const altoLaminaPx = LAMINA_ANCHO * escala; 
-        const anchoLaminaPx = LAMINA_ALTO * escala; 
+        const gapEntreLaminas = 40;
+        const anchoLaminaPx = LAMINA_ANCHO * escala; 
+        const altoLaminaPx = LAMINA_ALTO * escala; 
         
         canvas.width = anchoLaminaPx;
         canvas.height = (laminas.length * altoLaminaPx) + ((laminas.length + 1) * gapEntreLaminas);
@@ -248,7 +248,7 @@ function dibujarTodasLasLaminas() {
             ctx.save();
             ctx.translate(0, offsetY);
 
-            // Placa MDF horizontal grande
+            // Placa MDF vertical grande (122 x 244 cm)
             ctx.fillStyle = '#fdfbf7';
             ctx.fillRect(0, 0, anchoLaminaPx, altoLaminaPx);
 
