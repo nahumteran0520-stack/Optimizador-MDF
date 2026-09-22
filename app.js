@@ -14,38 +14,20 @@ const resetBtn = document.getElementById('resetBtn');
 const canvas = document.getElementById('canvasLamina');
 const ctx = canvas ? canvas.getContext('2d') : null;
 
-// Dimensiones de la lámina de MDF adaptadas a formato horizontal grande
-const LAMINA_ANCHO = 122; // cm (altura real de la plancha)
-const LAMINA_ALTO = 244;  // cm (largo real de la plancha)
-const MERMA_SIERRA = 0.3; // 0.3 c// Array para almacenar las piezas ingresadas
-let piezas = [];
-
-// Referencias a los elementos del DOM
-const nombreInput = document.getElementById('nombrePieza');
-const anchoInput = document.getElementById('anchoPieza');
-const altoInput = document.getElementById('altoPieza');
-const cantidadInput = document.getElementById('cantidadPieza');
-const agregarBtn = document.getElementById('agregarBtn');
-const listaPiezasUl = document.getElementById('listaPiezas');
-const calcularBtn = document.getElementById('calcularBtn');
-const pdfBtn = document.getElementById('pdfBtn');
-const resetBtn = document.getElementById('resetBtn'); 
-const canvas = document.getElementById('canvasLamina');
-const ctx = canvas ? canvas.getContext('2d') : null;
-
-// Dimensiones de la lámina de MDF en formato horizontal grande
-const LAMINA_ANCHO = 122; // cm 
-const LAMINA_ALTO = 244;  // cm 
+// Dimensiones de la lámina estándar de MDF en formato horizontal grande (244 x 122 cm)
+const LAMINA_ANCHO = 122; // cm (alto real)
+const LAMINA_ALTO = 244;  // cm (largo real)
 const MERMA_SIERRA = 0.3; // 0.3 cm de corte de sierra
 
-// Escala grande y detallada
+// Escala grande y amplia
 const escala = 3.2; 
 
 function pintarCanvasVacio() {
     if (!canvas || !ctx) return;
     try {
-        canvas.width = LAMINA_ALTO * escala;  
-        canvas.height = LAMINA_ANCHO * escala; 
+        // Forzar tamaño grande horizontal exacto (244 x 122 cm)
+        canvas.width = LAMINA_ALTO * escala;  // 780 px
+        canvas.height = LAMINA_ANCHO * escala; // 390 px
         
         ctx.fillStyle = '#fdfbf7'; 
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -54,7 +36,7 @@ function pintarCanvasVacio() {
         ctx.lineWidth = 3;
         ctx.strokeRect(0, 0, canvas.width, canvas.height);
 
-        // Texto guía en el cuadro vacío
+        // Texto guía elegante
         ctx.fillStyle = '#004b87';
         ctx.font = 'bold 14px Inter, sans-serif';
         ctx.fillText('LÁMINA DE MDF ESTÁNDAR (244 x 122 cm)', 20, 35);
@@ -165,14 +147,14 @@ if (pdfBtn) {
     });
 }
 
-// Algoritmo de empaquetado optimizado y sin textos encimados
+// Algoritmo de empaquetado optimizado para formato horizontal grande (244x122 cm)
 function dibujarTodasLasLaminas() {
     if (!canvas || !ctx) return;
 
     try {
         let piezasPendientes = [...piezas].sort((a, b) => (b.ancho * b.alto) - (a.ancho * a.alto));
         let laminas = [];
-        let margen = 0.5; // Margen optimizado para aprovechar mejor los bordes
+        let margen = 0.5; 
         let seguridadBucle = 0;
 
         while (piezasPendientes.length > 0 && seguridadBucle < 100) {
@@ -274,9 +256,7 @@ function dibujarTodasLasLaminas() {
             ctx.lineWidth = 3;
             ctx.strokeRect(0, 0, anchoLaminaPx, altoLaminaPx);
 
-            // (Se eliminó el texto molesto de "Lámina # - Aprovechamiento óptimo" para dejar el cuadro totalmente limpio)
-
-            // Dibujar piezas con escala grande y legible
+            // Dibujar piezas con escala grande y legible (sin textos encimados)
             laminaPiezas.forEach((pieza) => {
                 let drawW = (pieza.esRotada ? pieza.alto : pieza.ancho) * escala;
                 let drawH = (pieza.esRotada ? pieza.ancho : pieza.alto) * escala;
