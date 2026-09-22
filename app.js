@@ -25,8 +25,8 @@ const escala = 3.2;
 function pintarCanvasVacio() {
     if (!canvas || !ctx) return;
     try {
-        canvas.width = LAMINA_ALTO * escala;  // 780 px
-        canvas.height = LAMINA_ANCHO * escala; // 390 px
+        canvas.width = LAMINA_ALTO * escala;  
+        canvas.height = LAMINA_ANCHO * escala; 
         
         ctx.fillStyle = '#fdfbf7'; 
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -35,7 +35,6 @@ function pintarCanvasVacio() {
         ctx.lineWidth = 3;
         ctx.strokeRect(0, 0, canvas.width, canvas.height);
 
-        // Texto guía elegante
         ctx.fillStyle = '#004b87';
         ctx.font = 'bold 14px Inter, sans-serif';
         ctx.fillText('LÁMINA DE MDF ESTÁNDAR (244 x 122 cm)', 20, 35);
@@ -48,7 +47,6 @@ function pintarCanvasVacio() {
 
 pintarCanvasVacio();
 
-// Evento para agregar pieza a la lista
 if (agregarBtn) {
     agregarBtn.addEventListener('click', () => {
         const nombre = nombreInput.value.trim() || `Pieza ${piezas.length + 1}`;
@@ -116,7 +114,6 @@ window.eliminarPieza = function(index) {
     actualizarListaVisual();
 };
 
-// Evento para limpiar todo (Resetear)
 if (resetBtn) {
     resetBtn.addEventListener('click', () => {
         if (confirm('¿Estás seguro de que deseas eliminar todas las piezas de la lista?')) {
@@ -146,18 +143,19 @@ if (pdfBtn) {
     });
 }
 
-// Algoritmo exclusivo para UNA SOLA LÁMINA grande y horizontal
+// Algoritmo mejorado de distribución por bloques rectangulares libres
 function dibujarLaminaUnica() {
     if (!canvas || !ctx) return;
 
     try {
         let piezasOrdenadas = [...piezas].sort((a, b) => (b.ancho * b.alto) - (a.ancho * a.alto));
         let margen = 0.5; 
+        
         let espaciosLibres = [{
             x: margen,
             y: margen,
-            ancho: LAMINA_ALTO - (margen * 2), 
-            alto: LAMINA_ANCHO - (margen * 2)  
+            ancho: LAMINA_ALTO - (margen * 2), // 243 cm
+            alto: LAMINA_ANCHO - (margen * 2)  // 121 cm
         }];
         
         let piezasEnLamina = [];
@@ -198,24 +196,26 @@ function dibujarLaminaUnica() {
 
                 espaciosLibres.splice(mejorEspacioIndex, 1);
 
+                // Generar nuevos espacios libres resultantes de la división del bloque
                 if (espacio.ancho > anchoFinal) {
                     espaciosLibres.push({
                         x: espacio.x + anchoFinal,
                         y: espacio.y,
                         ancho: espacio.ancho - anchoFinal,
-                        alto: altoFinal
+                        alto: espacio.alto
                     });
                 }
                 if (espacio.alto > altoFinal) {
                     espaciosLibres.push({
                         x: espacio.x,
                         y: espacio.y + altoFinal,
-                        ancho: espacio.ancho,
+                        ancho: anchoFinal,
                         alto: espacio.alto - altoFinal
                     });
                 }
             } else {
                 alert(`La pieza "${pieza.nombre}" no cabe en la lámina disponible con la distribución actual.`);
+                return;
             }
         }
 
@@ -225,7 +225,6 @@ function dibujarLaminaUnica() {
         canvas.width = anchoLaminaPx;
         canvas.height = altoLaminaPx;
 
-        // Placa MDF horizontal grande única
         ctx.fillStyle = '#fdfbf7';
         ctx.fillRect(0, 0, anchoLaminaPx, altoLaminaPx);
 
@@ -233,7 +232,6 @@ function dibujarLaminaUnica() {
         ctx.lineWidth = 3;
         ctx.strokeRect(0, 0, anchoLaminaPx, altoLaminaPx);
 
-        // Dibujar piezas con escala grande y limpia
         piezasEnLamina.forEach((pieza) => {
             let drawW = (pieza.esRotada ? pieza.alto : pieza.ancho) * escala;
             let drawH = (pieza.esRotada ? pieza.ancho : pieza.alto) * escala;
