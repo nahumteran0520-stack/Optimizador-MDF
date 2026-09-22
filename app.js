@@ -19,13 +19,12 @@ const LAMINA_ANCHO = 122; // cm (alto real)
 const LAMINA_ALTO = 244;  // cm (largo real)
 const MERMA_SIERRA = 0.3; // 0.3 cm de corte de sierra
 
-// Escala grande y amplia
+// Escala grande y amplia original
 const escala = 3.2; 
 
 function pintarCanvasVacio() {
     if (!canvas || !ctx) return;
     try {
-        // Forzar tamaño grande horizontal exacto (244 x 122 cm)
         canvas.width = LAMINA_ALTO * escala;  // 780 px
         canvas.height = LAMINA_ANCHO * escala; // 390 px
         
@@ -66,7 +65,7 @@ if (agregarBtn) {
         const cabeRotada = (altoCm <= LAMINA_ALTO && anchoCm <= LAMINA_ANCHO);
 
         if (!cabeNormal && !cabeRotada) {
-            alert(`¡Advertencia! La pieza "${nombre}" (${anchoCm}x${altoCm} cm) supera las dimensiones máximas de una lámina de MDF (244 x 122 cm).`);
+            alert(`¡Advertencia! La pieza "${nombre}" (${anchoCm}x${altoCm} cm) supera las dimensiones máximas de la lámina (244 x 122 cm).`);
             return;
         }
 
@@ -136,7 +135,7 @@ if (calcularBtn) {
             return;
         }
 
-        dibujarTodasLasLaminas();
+        dibujarLaminaUnica();
         if (pdfBtn) pdfBtn.disabled = false;
     });
 }
@@ -147,138 +146,114 @@ if (pdfBtn) {
     });
 }
 
-// Algoritmo de empaquetado optimizado para formato horizontal grande (244x122 cm)
-function dibujarTodasLasLaminas() {
+// Algoritmo exclusivo para UNA SOLA LÁMINA grande y horizontal
+function dibujarLaminaUnica() {
     if (!canvas || !ctx) return;
 
     try {
-        let piezasPendientes = [...piezas].sort((a, b) => (b.ancho * b.alto) - (a.ancho * a.alto));
-        let laminas = [];
+        let piezasOrdenadas = [...piezas].sort((a, b) => (b.ancho * b.alto) - (a.ancho * a.alto));
         let margen = 0.5; 
-        let seguridadBucle = 0;
+        let espaciosLibres = [{
+            x: margen,
+            y: margen,
+            ancho: LAMINA_ALTO - (margen * 2), 
+            alto: LAMINA_ANCHO - (margen * 2)  
+        }];
+        
+        let piezasEnLamina = [];
 
-        while (piezasPendientes.length > 0 && seguridadBucle < 100) {
-            seguridadBucle++;
-            let espaciosLibres = [{
-                x: margen,
-                y: margen,
-                ancho: LAMINA_ALTO - (margen * 2), 
-                alto: LAMINA_ANCHO - (margen * 2)  
-            }];
-            
-            let piezasEnEstaLamina = [];
-            let piezasNoCaben = [];
+        for (let i = 0; i < piezasOrdenadas.length; i++) {
+            let pieza = piezasOrdenadas[i];
+            let pAncho = pieza.ancho + MERMA_SIERRA;
+            let pAlto = pieza.alto + MERMA_SIERRA;
 
-            for (let i = 0; i < piezasPendientes.length; i++) {
-                let pieza = piezasPendientes[i];
-                let pAncho = pieza.ancho + MERMA_SIERRA;
-                let pAlto = pieza.alto + MERMA_SIERRA;
+            let mejorEspacioIndex = -1;
+            let esRotada = false;
 
-                let mejorEspacioIndex = -1;
-                let esRotada = false;
+            for (let j = 0; j < espaciosLibres.length; j++) {
+                let espacio = espaciosLibres[j];
 
-                for (let j = 0; j < espaciosLibres.length; j++) {
-                    let espacio = espaciosLibres[j];
-
-                    if (pAncho <= espacio.ancho && pAlto <= espacio.alto) {
-                        mejorEspacioIndex = j;
-                        esRotada = false;
-                        break;
-                    } else if (pAlto <= espacio.ancho && pAncho <= espacio.alto) {
-                        mejorEspacioIndex = j;
-                        esRotada = true;
-                        break;
-                    }
-                }
-
-                if (mejorEspacioIndex !== -1) {
-                    let espacio = espaciosLibres[mejorEspacioIndex];
-                    let anchoFinal = esRotada ? pAlto : pAncho;
-                    let altoFinal = esRotada ? pAncho : pAlto;
-
-                    piezasEnEstaLamina.push({
-                        ...pieza,
-                        x: espacio.x,
-                        y: espacio.y,
-                        esRotada: esRotada
-                    });
-
-                    espaciosLibres.splice(mejorEspacioIndex, 1);
-
-                    if (espacio.ancho > anchoFinal) {
-                        espaciosLibres.push({
-                            x: espacio.x + anchoFinal,
-                            y: espacio.y,
-                            ancho: espacio.ancho - anchoFinal,
-                            alto: altoFinal
-                        });
-                    }
-                    if (espacio.alto > altoFinal) {
-                        espaciosLibres.push({
-                            x: espacio.x,
-                            y: espacio.y + altoFinal,
-                            ancho: espacio.ancho,
-                            alto: espacio.alto - altoFinal
-                        });
-                    }
-                } else {
-                    piezasNoCaben.push(pieza);
+                if (pAncho <= espacio.ancho && pAlto <= espacio.alto) {
+                    mejorEspacioIndex = j;
+                    esRotada = false;
+                    break;
+                } else if (pAlto <= espacio.ancho && pAncho <= espacio.alto) {
+                    mejorEspacioIndex = j;
+                    esRotada = true;
+                    break;
                 }
             }
 
-            if (piezasEnEstaLamina.length === 0) break;
+            if (mejorEspacioIndex !== -1) {
+                let espacio = espaciosLibres[mejorEspacioIndex];
+                let anchoFinal = esRotada ? pAlto : pAncho;
+                let altoFinal = esRotada ? pAncho : pAlto;
 
-            laminas.push(piezasEnEstaLamina);
-            piezasPendientes = piezasNoCaben;
+                piezasEnLamina.push({
+                    ...pieza,
+                    x: espacio.x,
+                    y: espacio.y,
+                    esRotada: esRotada
+                });
+
+                espaciosLibres.splice(mejorEspacioIndex, 1);
+
+                if (espacio.ancho > anchoFinal) {
+                    espaciosLibres.push({
+                        x: espacio.x + anchoFinal,
+                        y: espacio.y,
+                        ancho: espacio.ancho - anchoFinal,
+                        alto: altoFinal
+                    });
+                }
+                if (espacio.alto > altoFinal) {
+                    espaciosLibres.push({
+                        x: espacio.x,
+                        y: espacio.y + altoFinal,
+                        ancho: espacio.ancho,
+                        alto: espacio.alto - altoFinal
+                    });
+                }
+            } else {
+                alert(`La pieza "${pieza.nombre}" no cabe en la lámina disponible con la distribución actual.`);
+            }
         }
 
-        const gapEntreLaminas = 40;
         const anchoLaminaPx = LAMINA_ALTO * escala; 
         const altoLaminaPx = LAMINA_ANCHO * escala; 
         
         canvas.width = anchoLaminaPx;
-        canvas.height = (laminas.length * altoLaminaPx) + ((laminas.length + 1) * gapEntreLaminas);
+        canvas.height = altoLaminaPx;
 
-        ctx.fillStyle = '#f8fafc';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Placa MDF horizontal grande única
+        ctx.fillStyle = '#fdfbf7';
+        ctx.fillRect(0, 0, anchoLaminaPx, altoLaminaPx);
 
-        laminas.forEach((laminaPiezas, indexLamina) => {
-            let offsetY = gapEntreLaminas + (indexLamina * (altoLaminaPx + gapEntreLaminas));
+        ctx.strokeStyle = '#004b87';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(0, 0, anchoLaminaPx, altoLaminaPx);
 
-            ctx.save();
-            ctx.translate(0, offsetY);
+        // Dibujar piezas con escala grande y limpia
+        piezasEnLamina.forEach((pieza) => {
+            let drawW = (pieza.esRotada ? pieza.alto : pieza.ancho) * escala;
+            let drawH = (pieza.esRotada ? pieza.ancho : pieza.alto) * escala;
 
-            // Placa MDF horizontal grande
-            ctx.fillStyle = '#fdfbf7';
-            ctx.fillRect(0, 0, anchoLaminaPx, altoLaminaPx);
+            ctx.fillStyle = 'rgba(0, 75, 135, 0.15)';
+            ctx.fillRect(pieza.x * escala, pieza.y * escala, drawW, drawH);
 
             ctx.strokeStyle = '#004b87';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(0, 0, anchoLaminaPx, altoLaminaPx);
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(pieza.x * escala, pieza.y * escala, drawW, drawH);
 
-            // Dibujar piezas con escala grande y legible (sin textos encimados)
-            laminaPiezas.forEach((pieza) => {
-                let drawW = (pieza.esRotada ? pieza.alto : pieza.ancho) * escala;
-                let drawH = (pieza.esRotada ? pieza.ancho : pieza.alto) * escala;
-
-                ctx.fillStyle = 'rgba(0, 75, 135, 0.15)';
-                ctx.fillRect(pieza.x * escala, pieza.y * escala, drawW, drawH);
-
-                ctx.strokeStyle = '#004b87';
-                ctx.lineWidth = 1.5;
-                ctx.strokeRect(pieza.x * escala, pieza.y * escala, drawW, drawH);
-
-                ctx.fillStyle = '#1e293b';
-                ctx.font = '12px Inter, sans-serif';
-                ctx.fillText(pieza.nombre, (pieza.x * escala) + 6, (pieza.y * escala) + 20);
-                ctx.font = '11px Inter, sans-serif';
-                ctx.fillText(`${pieza.anchoCm} x ${pieza.altoCm} cm`, (pieza.x * escala) + 6, (pieza.y * escala) + 38);
-            });
-
-            ctx.restore();
+            ctx.fillStyle = '#1e293b';
+            ctx.font = '12px Inter, sans-serif';
+            ctx.fillText(pieza.nombre, (pieza.x * escala) + 6, (pieza.y * escala) + 20);
+            ctx.font = '11px Inter, sans-serif';
+            ctx.fillText(`${pieza.anchoCm} x ${pieza.altoCm} cm`, (pieza.x * escala) + 6, (pieza.y * escala) + 38);
         });
+
     } catch (err) {
-        console.error("Error al generar las láminas:", err);
+        console.error("Error al generar la lámina:", err);
     }
 }
 
