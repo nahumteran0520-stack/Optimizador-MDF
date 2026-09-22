@@ -17,17 +17,35 @@ const ctx = canvas ? canvas.getContext('2d') : null;
 // Dimensiones de la lámina de MDF adaptadas a formato horizontal grande
 const LAMINA_ANCHO = 122; // cm (altura real de la plancha)
 const LAMINA_ALTO = 244;  // cm (largo real de la plancha)
+const MERMA_SIERRA = 0.3; // 0.3 c// Array para almacenar las piezas ingresadas
+let piezas = [];
+
+// Referencias a los elementos del DOM
+const nombreInput = document.getElementById('nombrePieza');
+const anchoInput = document.getElementById('anchoPieza');
+const altoInput = document.getElementById('altoPieza');
+const cantidadInput = document.getElementById('cantidadPieza');
+const agregarBtn = document.getElementById('agregarBtn');
+const listaPiezasUl = document.getElementById('listaPiezas');
+const calcularBtn = document.getElementById('calcularBtn');
+const pdfBtn = document.getElementById('pdfBtn');
+const resetBtn = document.getElementById('resetBtn'); 
+const canvas = document.getElementById('canvasLamina');
+const ctx = canvas ? canvas.getContext('2d') : null;
+
+// Dimensiones de la lámina de MDF en formato horizontal grande
+const LAMINA_ANCHO = 122; // cm 
+const LAMINA_ALTO = 244;  // cm 
 const MERMA_SIERRA = 0.3; // 0.3 cm de corte de sierra
 
-// Escala grande para que se vea amplio y detallado como en tu referencia
+// Escala grande y detallada
 const escala = 3.2; 
 
 function pintarCanvasVacio() {
     if (!canvas || !ctx) return;
     try {
-        // Dimensiones horizontales grandes directas (244 x 122 cm)
-        canvas.width = LAMINA_ALTO * escala;  // 244 * 3.2 = 780 px
-        canvas.height = LAMINA_ANCHO * escala; // 122 * 3.2 = 390 px
+        canvas.width = LAMINA_ALTO * escala;  
+        canvas.height = LAMINA_ANCHO * escala; 
         
         ctx.fillStyle = '#fdfbf7'; 
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -147,14 +165,14 @@ if (pdfBtn) {
     });
 }
 
-// Algoritmo de empaquetado optimizado para formato horizontal grande (244x122 cm)
+// Algoritmo de empaquetado optimizado y sin textos encimados
 function dibujarTodasLasLaminas() {
     if (!canvas || !ctx) return;
 
     try {
         let piezasPendientes = [...piezas].sort((a, b) => (b.ancho * b.alto) - (a.ancho * a.alto));
         let laminas = [];
-        let margen = 1.0; 
+        let margen = 0.5; // Margen optimizado para aprovechar mejor los bordes
         let seguridadBucle = 0;
 
         while (piezasPendientes.length > 0 && seguridadBucle < 100) {
@@ -162,8 +180,8 @@ function dibujarTodasLasLaminas() {
             let espaciosLibres = [{
                 x: margen,
                 y: margen,
-                ancho: LAMINA_ALTO - (margen * 2), // Eje X horizontal: 244 cm
-                alto: LAMINA_ANCHO - (margen * 2)  // Eje Y vertical: 122 cm
+                ancho: LAMINA_ALTO - (margen * 2), 
+                alto: LAMINA_ANCHO - (margen * 2)  
             }];
             
             let piezasEnEstaLamina = [];
@@ -256,10 +274,7 @@ function dibujarTodasLasLaminas() {
             ctx.lineWidth = 3;
             ctx.strokeRect(0, 0, anchoLaminaPx, altoLaminaPx);
 
-            // Etiqueta de la Lámina
-            ctx.fillStyle = '#004b87';
-            ctx.font = 'bold 14px Inter, sans-serif';
-            ctx.fillText(`LÁMINA #${indexLamina + 1} (Aprovechamiento Óptimo)`, 15, 25);
+            // (Se eliminó el texto molesto de "Lámina # - Aprovechamiento óptimo" para dejar el cuadro totalmente limpio)
 
             // Dibujar piezas con escala grande y legible
             laminaPiezas.forEach((pieza) => {
