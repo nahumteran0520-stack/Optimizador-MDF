@@ -14,30 +14,34 @@ const resetBtn = document.getElementById('resetBtn');
 const canvas = document.getElementById('canvasLamina');
 const ctx = canvas ? canvas.getContext('2d') : null;
 
-// Dimensiones estándar de la lámina de MDF (Ancho: 122 cm, Alto: 244 cm)
-const LAMINA_ANCHO = 122; 
-const LAMINA_ALTO = 244;  
+// Dimensiones de la lámina de MDF adaptadas a formato horizontal grande
+const LAMINA_ANCHO = 122; // cm (altura real de la plancha)
+const LAMINA_ALTO = 244;  // cm (largo real de la plancha)
 const MERMA_SIERRA = 0.3; // 0.3 cm de corte de sierra
 
-// Escala estándar original
-const escala = 2.0; 
+// Escala grande para que se vea amplio y detallado como en tu referencia
+const escala = 3.2; 
 
 function pintarCanvasVacio() {
     if (!canvas || !ctx) return;
     try {
-        canvas.width = LAMINA_ALTO * escala;  // 244 * 2 = 488 px aprox
-        canvas.height = LAMINA_ANCHO * escala; // 122 * 2 = 244 px
+        // Dimensiones horizontales grandes directas (244 x 122 cm)
+        canvas.width = LAMINA_ALTO * escala;  // 244 * 3.2 = 780 px
+        canvas.height = LAMINA_ANCHO * escala; // 122 * 3.2 = 390 px
         
         ctx.fillStyle = '#fdfbf7'; 
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        ctx.save();
-        ctx.translate(canvas.width, 0);
-        ctx.rotate(Math.PI / 2);
         ctx.strokeStyle = '#004b87';
         ctx.lineWidth = 3;
-        ctx.strokeRect(0, 0, LAMINA_ANCHO * escala, LAMINA_ALTO * escala);
-        ctx.restore();
+        ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+        // Texto guía en el cuadro vacío
+        ctx.fillStyle = '#004b87';
+        ctx.font = 'bold 14px Inter, sans-serif';
+        ctx.fillText('LÁMINA DE MDF ESTÁNDAR (244 x 122 cm)', 20, 35);
+        ctx.font = '12px Inter, sans-serif';
+        ctx.fillText('Agrega tus piezas y presiona "Calcular Patrón de Corte"', 20, 60);
     } catch (e) {
         console.error("Error al pintar canvas vacío:", e);
     }
@@ -58,11 +62,11 @@ if (agregarBtn) {
             return;
         }
 
-        const cabeNormal = (anchoCm <= LAMINA_ANCHO && altoCm <= LAMINA_ALTO);
-        const cabeRotada = (altoCm <= LAMINA_ANCHO && anchoCm <= LAMINA_ALTO);
+        const cabeNormal = (anchoCm <= LAMINA_ALTO && altoCm <= LAMINA_ANCHO);
+        const cabeRotada = (altoCm <= LAMINA_ALTO && anchoCm <= LAMINA_ANCHO);
 
         if (!cabeNormal && !cabeRotada) {
-            alert(`¡Advertencia! La pieza "${nombre}" (${anchoCm}x${altoCm} cm) supera las dimensiones máximas de una lámina de MDF (122 x 244 cm).`);
+            alert(`¡Advertencia! La pieza "${nombre}" (${anchoCm}x${altoCm} cm) supera las dimensiones máximas de una lámina de MDF (244 x 122 cm).`);
             return;
         }
 
@@ -143,7 +147,7 @@ if (pdfBtn) {
     });
 }
 
-// Algoritmo de empaquetado estable y seguro
+// Algoritmo de empaquetado optimizado para formato horizontal grande (244x122 cm)
 function dibujarTodasLasLaminas() {
     if (!canvas || !ctx) return;
 
@@ -158,8 +162,8 @@ function dibujarTodasLasLaminas() {
             let espaciosLibres = [{
                 x: margen,
                 y: margen,
-                ancho: LAMINA_ANCHO - (margen * 2),
-                alto: LAMINA_ALTO - (margen * 2)
+                ancho: LAMINA_ALTO - (margen * 2), // Eje X horizontal: 244 cm
+                alto: LAMINA_ANCHO - (margen * 2)  // Eje Y vertical: 122 cm
             }];
             
             let piezasEnEstaLamina = [];
@@ -229,11 +233,11 @@ function dibujarTodasLasLaminas() {
         }
 
         const gapEntreLaminas = 40;
+        const anchoLaminaPx = LAMINA_ALTO * escala; 
         const altoLaminaPx = LAMINA_ANCHO * escala; 
-        let nuevoAlto = (laminas.length * altoLaminaPx) + ((laminas.length + 1) * gapEntreLaminas);
         
-        canvas.width = LAMINA_ALTO * escala;
-        canvas.height = nuevoAlto;
+        canvas.width = anchoLaminaPx;
+        canvas.height = (laminas.length * altoLaminaPx) + ((laminas.length + 1) * gapEntreLaminas);
 
         ctx.fillStyle = '#f8fafc';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -242,23 +246,22 @@ function dibujarTodasLasLaminas() {
             let offsetY = gapEntreLaminas + (indexLamina * (altoLaminaPx + gapEntreLaminas));
 
             ctx.save();
-            ctx.translate(canvas.width, offsetY);
-            ctx.rotate(Math.PI / 2);
+            ctx.translate(0, offsetY);
 
+            // Placa MDF horizontal grande
             ctx.fillStyle = '#fdfbf7';
-            ctx.fillRect(0, 0, LAMINA_ANCHO * escala, LAMINA_ALTO * escala);
+            ctx.fillRect(0, 0, anchoLaminaPx, altoLaminaPx);
 
             ctx.strokeStyle = '#004b87';
             ctx.lineWidth = 3;
-            ctx.strokeRect(0, 0, LAMINA_ANCHO * escala, LAMINA_ALTO * escala);
+            ctx.strokeRect(0, 0, anchoLaminaPx, altoLaminaPx);
 
-            ctx.save();
-            ctx.rotate(-Math.PI / 2);
+            // Etiqueta de la Lámina
             ctx.fillStyle = '#004b87';
-            ctx.font = 'bold 13px Inter, sans-serif';
-            ctx.fillText(`LÁMINA #${indexLamina + 1}`, 15, -15);
-            ctx.restore();
+            ctx.font = 'bold 14px Inter, sans-serif';
+            ctx.fillText(`LÁMINA #${indexLamina + 1} (Aprovechamiento Óptimo)`, 15, 25);
 
+            // Dibujar piezas con escala grande y legible
             laminaPiezas.forEach((pieza) => {
                 let drawW = (pieza.esRotada ? pieza.alto : pieza.ancho) * escala;
                 let drawH = (pieza.esRotada ? pieza.ancho : pieza.alto) * escala;
@@ -271,10 +274,10 @@ function dibujarTodasLasLaminas() {
                 ctx.strokeRect(pieza.x * escala, pieza.y * escala, drawW, drawH);
 
                 ctx.fillStyle = '#1e293b';
+                ctx.font = '12px Inter, sans-serif';
+                ctx.fillText(pieza.nombre, (pieza.x * escala) + 6, (pieza.y * escala) + 20);
                 ctx.font = '11px Inter, sans-serif';
-                ctx.fillText(pieza.nombre, (pieza.x * escala) + 4, (pieza.y * escala) + 14);
-                ctx.font = '10px Inter, sans-serif';
-                ctx.fillText(`${pieza.anchoCm}x${pieza.altoCm} cm`, (pieza.x * escala) + 4, (pieza.y * escala) + 26);
+                ctx.fillText(`${pieza.anchoCm} x ${pieza.altoCm} cm`, (pieza.x * escala) + 6, (pieza.y * escala) + 38);
             });
 
             ctx.restore();
