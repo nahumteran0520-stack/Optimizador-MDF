@@ -15,11 +15,10 @@ const canvas = document.getElementById('canvasLamina');
 const ctx = canvas ? canvas.getContext('2d') : null;
 
 // Dimensiones de la lámina estándar de MDF en formato horizontal grande (244 x 122 cm)
-const LAMINA_ANCHO = 122; // cm (alto real)
-const LAMINA_ALTO = 244;  // cm (largo real)
+const LAMINA_ANCHO = 122; // cm 
+const LAMINA_ALTO = 244;  // cm 
 const MERMA_SIERRA = 0.3; // 0.3 cm de corte de sierra
 
-// Escala grande y amplia original
 const escala = 3.2; 
 
 function pintarCanvasVacio() {
@@ -63,7 +62,7 @@ if (agregarBtn) {
         const cabeRotada = (altoCm <= LAMINA_ALTO && anchoCm <= LAMINA_ANCHO);
 
         if (!cabeNormal && !cabeRotada) {
-            alert(`¡Advertencia! La pieza "${nombre}" (${anchoCm}x${altoCm} cm) supera las dimensiones máximas de la lámina (244 x 122 cm).`);
+            alert(`¡Advertencia! La pieza "${nombre}" (${anchoCm}x${altoCm} cm) supera las dimensiones máximas de la lámina.`);
             return;
         }
 
@@ -116,7 +115,7 @@ window.eliminarPieza = function(index) {
 
 if (resetBtn) {
     resetBtn.addEventListener('click', () => {
-        if (confirm('¿Estás seguro de que deseas eliminar todas las piezas de la lista?')) {
+        if (confirm('¿Deseas eliminar todas las piezas?')) {
             piezas = [];
             actualizarListaVisual();
             if (pdfBtn) pdfBtn.disabled = true;
@@ -131,7 +130,6 @@ if (calcularBtn) {
             alert('Agrega al menos una pieza antes de calcular.');
             return;
         }
-
         dibujarLaminaUnica();
         if (pdfBtn) pdfBtn.disabled = false;
     });
@@ -143,19 +141,20 @@ if (pdfBtn) {
     });
 }
 
-// Algoritmo mejorado de distribución por bloques rectangulares libres
+// Algoritmo con rotación inteligente optimizada para espacios libres
 function dibujarLaminaUnica() {
     if (!canvas || !ctx) return;
 
     try {
+        // Ordenar piezas de mayor a menor área para empaquetado eficiente
         let piezasOrdenadas = [...piezas].sort((a, b) => (b.ancho * b.alto) - (a.ancho * a.alto));
         let margen = 0.5; 
         
         let espaciosLibres = [{
             x: margen,
             y: margen,
-            ancho: LAMINA_ALTO - (margen * 2), // 243 cm
-            alto: LAMINA_ANCHO - (margen * 2)  // 121 cm
+            ancho: LAMINA_ALTO - (margen * 2), 
+            alto: LAMINA_ANCHO - (margen * 2)  
         }];
         
         let piezasEnLamina = [];
@@ -171,6 +170,7 @@ function dibujarLaminaUnica() {
             for (let j = 0; j < espaciosLibres.length; j++) {
                 let espacio = espaciosLibres[j];
 
+                // Evaluar si cabe normal o rotada en el espacio actual
                 if (pAncho <= espacio.ancho && pAlto <= espacio.alto) {
                     mejorEspacioIndex = j;
                     esRotada = false;
@@ -196,7 +196,7 @@ function dibujarLaminaUnica() {
 
                 espaciosLibres.splice(mejorEspacioIndex, 1);
 
-                // Generar nuevos espacios libres resultantes de la división del bloque
+                // Subdivisión precisa de espacios libres
                 if (espacio.ancho > anchoFinal) {
                     espaciosLibres.push({
                         x: espacio.x + anchoFinal,
@@ -214,7 +214,7 @@ function dibujarLaminaUnica() {
                     });
                 }
             } else {
-                alert(`La pieza "${pieza.nombre}" no cabe en la lámina disponible con la distribución actual.`);
+                alert(`La pieza "${pieza.nombre}" (${pieza.anchoCm}x${pieza.altoCm} cm) excede el espacio libre disponible en la lámina.`);
                 return;
             }
         }
