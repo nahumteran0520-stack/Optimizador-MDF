@@ -91,6 +91,16 @@ function actualizarListaVisual() {
     if (!listaPiezasUl) return;
     listaPiezasUl.innerHTML = '';
     
+    // Actualizar el título con el total de cortes/piezas solicitadas
+    const tituloSeccion = document.querySelector('h2:nth-of-type(2), h3:nth-of-type(2)') || document.querySelector('.form-container + div h3, #piezas-titulo');
+    // Buscamos dinámicamente el encabezado de "Piezas Solicitadas para Corte"
+    const encabezados = document.querySelectorAll('h2, h3');
+    encabezados.forEach(h => {
+        if (h.textContent.includes('Piezas Solicitadas')) {
+            h.textContent = `Piezas Solicitadas para Corte (Total: ${piezas.length} cortes)`;
+        }
+    });
+
     if (piezas.length === 0) {
         listaPiezasUl.innerHTML = '<li style="justify-content: center; color: #888;">No hay piezas agregadas aún.</li>';
         if (pdfBtn) pdfBtn.disabled = true;
@@ -141,12 +151,10 @@ if (pdfBtn) {
     });
 }
 
-// Algoritmo con rotación inteligente optimizada para espacios libres
 function dibujarLaminaUnica() {
     if (!canvas || !ctx) return;
 
     try {
-        // Ordenar piezas de mayor a menor área para empaquetado eficiente
         let piezasOrdenadas = [...piezas].sort((a, b) => (b.ancho * b.alto) - (a.ancho * a.alto));
         let margen = 0.5; 
         
@@ -170,7 +178,6 @@ function dibujarLaminaUnica() {
             for (let j = 0; j < espaciosLibres.length; j++) {
                 let espacio = espaciosLibres[j];
 
-                // Evaluar si cabe normal o rotada en el espacio actual
                 if (pAncho <= espacio.ancho && pAlto <= espacio.alto) {
                     mejorEspacioIndex = j;
                     esRotada = false;
@@ -196,7 +203,6 @@ function dibujarLaminaUnica() {
 
                 espaciosLibres.splice(mejorEspacioIndex, 1);
 
-                // Subdivisión precisa de espacios libres
                 if (espacio.ancho > anchoFinal) {
                     espaciosLibres.push({
                         x: espacio.x + anchoFinal,
