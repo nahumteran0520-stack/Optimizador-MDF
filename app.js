@@ -144,7 +144,7 @@ if (pdfBtn) {
     });
 }
 
-// Algoritmo ultra-flexible sin restricciones estrictas de bloques
+// Algoritmo de guillotinado optimizado para aprovechar huecos exactos
 function dibujarLaminaUnica() {
     if (!canvas || !ctx) return;
 
@@ -197,33 +197,29 @@ function dibujarLaminaUnica() {
 
                 espaciosLibres.splice(mejorEspacioIndex, 1);
 
+                // Subdivisión limpia y precisa del espacio restante
                 let anchoConMerma = anchoFinal + MERMA_SIERRA;
                 let altoConMerma = altoFinal + MERMA_SIERRA;
 
-                if (espacio.ancho > anchoConMerma) {
+                if (espacio.ancho > anchoFinal) {
                     espaciosLibres.push({
-                        x: espacio.x + anchoConMerma,
+                        x: espacio.x + anchoFinal,
                         y: espacio.y,
-                        ancho: espacio.ancho - anchoConMerma,
+                        ancho: espacio.ancho - anchoFinal,
                         alto: espacio.alto
                     });
                 }
-                if (espacio.alto > altoConMerma) {
+                if (espacio.alto > altoFinal) {
                     espaciosLibres.push({
                         x: espacio.x,
-                        y: espacio.y + altoConMerma,
+                        y: espacio.y + altoFinal,
                         ancho: anchoFinal,
-                        alto: espacio.alto - altoConMerma
+                        alto: espacio.alto - altoFinal
                     });
                 }
             } else {
-                // Si llegara a faltar espacio milimétrico, se ubica automáticamente en el área remanente inferior para que no te bloquee
-                piezasEnLamina.push({
-                    ...pieza,
-                    x: margen,
-                    y: LAMINA_ANCHO - pAlto - margen,
-                    esRotada: false
-                });
+                alert(`La pieza "${pieza.nombre}" (${pieza.anchoCm}x${pieza.altoCm} cm) excede el espacio libre disponible en la lámina.`);
+                return;
             }
         }
 
