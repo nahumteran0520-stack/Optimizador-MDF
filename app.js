@@ -99,7 +99,6 @@ function actualizarListaVisual() {
         listaPiezasUl.parentNode.insertBefore(cajaTotal, listaPiezasUl);
     }
     
-    // Mostramos la cantidad total de piezas/cortes registrados
     cajaTotal.innerHTML = `<span>Total de cortes a realizar:</span> <span style="background: #004b87; color: white; padding: 2px 10px; border-radius: 12px; font-size: 15px;">${piezas.length}</span>`;
 
     listaPiezasUl.innerHTML = '';
@@ -154,6 +153,7 @@ if (pdfBtn) {
     });
 }
 
+// Algoritmo ultra-optimizado para máxima ocupación de espacio
 function dibujarLaminaUnica() {
     if (!canvas || !ctx) return;
 
@@ -172,8 +172,10 @@ function dibujarLaminaUnica() {
 
         for (let i = 0; i < piezasOrdenadas.length; i++) {
             let pieza = piezasOrdenadas[i];
-            let pAncho = pieza.ancho + MERMA_SIERRA;
-            let pAlto = pieza.alto + MERMA_SIERRA;
+            
+            // Usamos las medidas exactas de la pieza para evaluar el espacio disponible de forma flexible
+            let pAncho = pieza.ancho;
+            let pAlto = pieza.alto;
 
             let mejorEspacioIndex = -1;
             let esRotada = false;
@@ -181,6 +183,7 @@ function dibujarLaminaUnica() {
             for (let j = 0; j < espaciosLibres.length; j++) {
                 let espacio = espaciosLibres[j];
 
+                // Comprobación flexible orientada a aprovechar cada centímetro libre
                 if (pAncho <= espacio.ancho && pAlto <= espacio.alto) {
                     mejorEspacioIndex = j;
                     esRotada = false;
@@ -206,20 +209,24 @@ function dibujarLaminaUnica() {
 
                 espaciosLibres.splice(mejorEspacioIndex, 1);
 
-                if (espacio.ancho > anchoFinal) {
+                // Subdivisión maximizada considerando la pequeña merma solo para desahogo posterior
+                let anchoConMerma = anchoFinal + MERMA_SIERRA;
+                let altoConMerma = altoFinal + MERMA_SIERRA;
+
+                if (espacio.ancho > anchoConMerma) {
                     espaciosLibres.push({
-                        x: espacio.x + anchoFinal,
+                        x: espacio.x + anchoConMerma,
                         y: espacio.y,
-                        ancho: espacio.ancho - anchoFinal,
+                        ancho: espacio.ancho - anchoConMerma,
                         alto: espacio.alto
                     });
                 }
-                if (espacio.alto > altoFinal) {
+                if (espacio.alto > altoConMerma) {
                     espaciosLibres.push({
                         x: espacio.x,
-                        y: espacio.y + altoFinal,
+                        y: espacio.y + altoConMerma,
                         ancho: anchoFinal,
-                        alto: espacio.alto - altoFinal
+                        alto: espacio.alto - altoConMerma
                     });
                 }
             } else {
