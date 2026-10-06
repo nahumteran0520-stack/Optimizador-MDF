@@ -89,22 +89,18 @@ if (agregarBtn) {
 
 function actualizarListaVisual() {
     if (!listaPiezasUl) return;
-    listaPiezasUl.innerHTML = '';
     
-    // Buscar o crear un indicador de total visible justo arriba de la lista
-    let contenedorSeccion = listaPiezasUl.closest('div');
+    // Actualizar directamente el título de la sección para mostrar el total de cortes
+    const contenedorSeccion = listaPiezasUl.closest('div');
     if (contenedorSeccion) {
-        let contadorVisual = document.getElementById('totalCortesBadge');
-        if (!contadorVisual) {
-            contadorVisual = document.createElement('div');
-            contadorVisual.id = 'totalCortesBadge';
-            contadorVisual.style.cssText = 'margin-bottom: 10px; font-weight: bold; color: #004b87; font-size: 14px;';
-            listaPiezasUl.parentNode.insertBefore(contadorVisual, listaPiezasUl);
+        const titulo = contenedorSeccion.querySelector('h2, h3');
+        if (titulo) {
+            titulo.textContent = `Piezas Solicitadas para Corte (Total de cortes: ${piezas.length})`;
         }
-        let totalPiezasUnidades = piezas.length;
-        contadorVisual.textContent = `Total de piezas / cortes a realizar: ${totalPiezasUnidades}`;
     }
 
+    listaPiezasUl.innerHTML = '';
+    
     if (piezas.length === 0) {
         listaPiezasUl.innerHTML = '<li style="justify-content: center; color: #888;">No hay piezas agregadas aún.</li>';
         if (pdfBtn) pdfBtn.disabled = true;
@@ -205,7 +201,7 @@ function dibujarLaminaUnica() {
                     esRotada: esRotada
                 });
 
-                espaciosLibres.splice(mejorEspacioIndex, 1);
+        espaciosLibres.splice(mejorEspacioIndex, 1);
 
                 if (espacio.ancho > anchoFinal) {
                     espaciosLibres.push({
