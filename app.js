@@ -91,15 +91,19 @@ function actualizarListaVisual() {
     if (!listaPiezasUl) return;
     listaPiezasUl.innerHTML = '';
     
-    // Actualizar el título con el total de cortes/piezas solicitadas
-    const tituloSeccion = document.querySelector('h2:nth-of-type(2), h3:nth-of-type(2)') || document.querySelector('.form-container + div h3, #piezas-titulo');
-    // Buscamos dinámicamente el encabezado de "Piezas Solicitadas para Corte"
-    const encabezados = document.querySelectorAll('h2, h3');
-    encabezados.forEach(h => {
-        if (h.textContent.includes('Piezas Solicitadas')) {
-            h.textContent = `Piezas Solicitadas para Corte (Total: ${piezas.length} cortes)`;
+    // Buscar o crear un indicador de total visible justo arriba de la lista
+    let contenedorSeccion = listaPiezasUl.closest('div');
+    if (contenedorSeccion) {
+        let contadorVisual = document.getElementById('totalCortesBadge');
+        if (!contadorVisual) {
+            contadorVisual = document.createElement('div');
+            contadorVisual.id = 'totalCortesBadge';
+            contadorVisual.style.cssText = 'margin-bottom: 10px; font-weight: bold; color: #004b87; font-size: 14px;';
+            listaPiezasUl.parentNode.insertBefore(contadorVisual, listaPiezasUl);
         }
-    });
+        let totalPiezasUnidades = piezas.length;
+        contadorVisual.textContent = `Total de piezas / cortes a realizar: ${totalPiezasUnidades}`;
+    }
 
     if (piezas.length === 0) {
         listaPiezasUl.innerHTML = '<li style="justify-content: center; color: #888;">No hay piezas agregadas aún.</li>';
