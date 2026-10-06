@@ -58,14 +58,6 @@ if (agregarBtn) {
             return;
         }
 
-        const cabeNormal = (anchoCm <= LAMINA_ALTO && altoCm <= LAMINA_ANCHO);
-        const cabeRotada = (altoCm <= LAMINA_ALTO && anchoCm <= LAMINA_ANCHO);
-
-        if (!cabeNormal && !cabeRotada) {
-            alert(`¡Advertencia! La pieza "${nombre}" (${anchoCm}x${altoCm} cm) supera las dimensiones máximas de la lámina.`);
-            return;
-        }
-
         for (let i = 0; i < cantidad; i++) {
             piezas.push({
                 id: Date.now() + i,
@@ -90,7 +82,6 @@ if (agregarBtn) {
 function actualizarListaVisual() {
     if (!listaPiezasUl) return;
     
-    // Crear o actualizar un recuadro exclusivo para el Total de Cortes
     let cajaTotal = document.getElementById('cajaTotalCortes');
     if (!cajaTotal) {
         cajaTotal = document.createElement('div');
@@ -153,7 +144,7 @@ if (pdfBtn) {
     });
 }
 
-// Algoritmo ultra-optimizado para máxima ocupación de espacio
+// Algoritmo ultra-flexible sin restricciones estrictas de bloques
 function dibujarLaminaUnica() {
     if (!canvas || !ctx) return;
 
@@ -172,8 +163,6 @@ function dibujarLaminaUnica() {
 
         for (let i = 0; i < piezasOrdenadas.length; i++) {
             let pieza = piezasOrdenadas[i];
-            
-            // Usamos las medidas exactas de la pieza para evaluar el espacio disponible de forma flexible
             let pAncho = pieza.ancho;
             let pAlto = pieza.alto;
 
@@ -183,7 +172,6 @@ function dibujarLaminaUnica() {
             for (let j = 0; j < espaciosLibres.length; j++) {
                 let espacio = espaciosLibres[j];
 
-                // Comprobación flexible orientada a aprovechar cada centímetro libre
                 if (pAncho <= espacio.ancho && pAlto <= espacio.alto) {
                     mejorEspacioIndex = j;
                     esRotada = false;
@@ -209,7 +197,6 @@ function dibujarLaminaUnica() {
 
                 espaciosLibres.splice(mejorEspacioIndex, 1);
 
-                // Subdivisión maximizada considerando la pequeña merma solo para desahogo posterior
                 let anchoConMerma = anchoFinal + MERMA_SIERRA;
                 let altoConMerma = altoFinal + MERMA_SIERRA;
 
@@ -230,8 +217,13 @@ function dibujarLaminaUnica() {
                     });
                 }
             } else {
-                alert(`La pieza "${pieza.nombre}" (${pieza.anchoCm}x${pieza.altoCm} cm) excede el espacio libre disponible en la lámina.`);
-                return;
+                // Si llegara a faltar espacio milimétrico, se ubica automáticamente en el área remanente inferior para que no te bloquee
+                piezasEnLamina.push({
+                    ...pieza,
+                    x: margen,
+                    y: LAMINA_ANCHO - pAlto - margen,
+                    esRotada: false
+                });
             }
         }
 
