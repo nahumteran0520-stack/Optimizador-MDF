@@ -90,14 +90,17 @@ if (agregarBtn) {
 function actualizarListaVisual() {
     if (!listaPiezasUl) return;
     
-    // Actualizar directamente el título de la sección para mostrar el total de cortes
-    const contenedorSeccion = listaPiezasUl.closest('div');
-    if (contenedorSeccion) {
-        const titulo = contenedorSeccion.querySelector('h2, h3');
-        if (titulo) {
-            titulo.textContent = `Piezas Solicitadas para Corte (Total de cortes: ${piezas.length})`;
-        }
+    // Crear o actualizar un recuadro exclusivo para el Total de Cortes
+    let cajaTotal = document.getElementById('cajaTotalCortes');
+    if (!cajaTotal) {
+        cajaTotal = document.createElement('div');
+        cajaTotal.id = 'cajaTotalCortes';
+        cajaTotal.style.cssText = 'background: #f0f4f8; border-left: 4px solid #004b87; padding: 10px 15px; margin-bottom: 12px; font-weight: bold; color: #004b87; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;';
+        listaPiezasUl.parentNode.insertBefore(cajaTotal, listaPiezasUl);
     }
+    
+    // Mostramos la cantidad total de piezas/cortes registrados
+    cajaTotal.innerHTML = `<span>Total de cortes a realizar:</span> <span style="background: #004b87; color: white; padding: 2px 10px; border-radius: 12px; font-size: 15px;">${piezas.length}</span>`;
 
     listaPiezasUl.innerHTML = '';
     
@@ -201,7 +204,7 @@ function dibujarLaminaUnica() {
                     esRotada: esRotada
                 });
 
-        espaciosLibres.splice(mejorEspacioIndex, 1);
+                espaciosLibres.splice(mejorEspacioIndex, 1);
 
                 if (espacio.ancho > anchoFinal) {
                     espaciosLibres.push({
